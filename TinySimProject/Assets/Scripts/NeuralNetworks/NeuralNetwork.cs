@@ -67,8 +67,8 @@ public class NeuralNetwork
             );
             nodeMap[nodeGene.id] = node;
 
-            if (nodeGene.type == NodeType.Input) inputNodes.Add(node);
-            if (nodeGene.type == NodeType.Output) outputNodes.Add(node);
+            if (nodeGene.type == NodeType.Input) {inputNodes.Add(node);}
+            if (nodeGene.type == NodeType.Output) {outputNodes.Add(node);}
         }
 
         connections = new List<Connection>();

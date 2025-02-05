@@ -12,10 +12,10 @@ public static class ReproductionManager
         child.genome = CrossoverManager.Crossover(parent1.genome, parent2.genome);
 
         // Crossover attributes
-        var (size, speed, color, visionDistance, visionAngle) = AttributeCrossoverManager.CrossoverAttributes(parent1, parent2);
+        var (size, speed, colour, visionDistance, visionAngle) = AttributeCrossoverManager.CrossoverAttributes(parent1, parent2);
         child.size = size;
         child.speed = speed;
-        child.color = color;
+        child.colour = colour;
         child.visionDistance = visionDistance;
         child.visionAngle = visionAngle;
 
@@ -26,7 +26,7 @@ public static class ReproductionManager
         AttributeCrossoverManager.MutateAttributes(
             ref child.size,
             ref child.speed,
-            ref child.color,
+            ref child.colour,
             ref child.visionDistance,
             ref child.visionAngle,
             parent1.mutationChance,

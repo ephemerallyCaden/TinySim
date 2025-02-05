@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public static class InnovationTracker
 {
-    private static int nextNodeId = 0;
+    private static int nextNodeId = 15;
     private static int nextLinkId = 0;
     private static Dictionary<(int, int), int> linkIds = new Dictionary<(int, int), int>();
 

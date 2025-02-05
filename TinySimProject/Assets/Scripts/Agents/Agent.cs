@@ -6,11 +6,12 @@ using UnityEngine;
 public class Agent : MonoBehaviour
 {
     // Agent Characteristics (can mutate)
+    public Vector3 position;
     public float size;                // Size of the agent
     public float speed;               // Base speed
     public float visionDistance = 10f; // How far the agent can see
     public float visionAngle = 90f;   // Field of view in degrees
-    public Color color;               // Agent's color
+    public Color colour;               // Agent's colour
     public float mutationMagnitudeMod;
     public float mutationChanceMod;
     public float mutationMagnitude;
@@ -40,7 +41,7 @@ public class Agent : MonoBehaviour
     public float desireValue;         // Desire value (used for decision-making)
 
     // Environment Sensors
-    public LayerMask creatureLayer;   // Layer for creatures
+    public LayerMask agentLayer;   // Layer for agents
     public LayerMask foodLayer;       // Layer for food
 
     // Closest objects
@@ -52,13 +53,13 @@ public class Agent : MonoBehaviour
     float closestFoodAngle;
 
     // Preallocated collider buffer for vision detection
-    [SerializeField] private Collider2D[] hitList;
+    private Collider2D[] hitList = new Collider2D[20];
 
     private void Start()
     {
         //Variable Calculations
-        metabolismCost = 0.15f * size * speed;
-
+        metabolismCost = 0.15f*speed*size;
+        energy = maxEnergy;
         // Global mutation parameters from the SimulationManager
         float globalMutationChance = SimulationManager.instance.globalMutationChance;
         float globalMutationMagnitude = SimulationManager.instance.globalMutationMagnitude;
@@ -68,28 +69,28 @@ public class Agent : MonoBehaviour
         mutationMagnitude = globalMutationMagnitude * (1 + mutationMagnitudeMod);
 
         // Preallocate inputs
-        InitialiseInputs();
+        InitialiseNetworkVariables();
 
-        // Preallocate collider buffer
-        hitList = new Collider2D[20]; // Adjust size based on expected number of objects
 
         // Set birth time
         birthTime = SimulationManager.instance.worldTime;
+
     }
 
     // Preallocate the input list
-    private void InitialiseInputs()
+    private void InitialiseNetworkVariables()
     {
-        inputs[0] = 1.0;              // Control input (always 1)
+        
         inputs = new double[network.inputNodes.Count]; // Preallocate for 13 inputs
-        for (int i = 1; i < inputs.Length; i++)
+        inputs[0] = 1.0;              // Control input (always 1)
+        for (int i = 1; i < network.inputNodes.Count; i++)
         {
             inputs[i] = 0.0; // Initialise with default values
         }
         outputs = new double[network.outputNodes.Count]; // Preallocate for 13 inputs
-        for (int i = 0; i < inputs.Length; i++)
+        for (int i = 0; i < network.outputNodes.Count; i++)
         {
-            inputs[i] = 0.0; // Initialise with default values
+            outputs[i] = 0.0; // Initialise with default values
         }
     }
 
@@ -149,10 +150,8 @@ public class Agent : MonoBehaviour
         closestFoodDistance = float.MaxValue;
         closestFoodAngle = -1;
 
-        Vector3 position = transform.position;
-
         // Detect objects within vision range
-        int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hitList, creatureLayer | foodLayer);
+        int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hitList, agentLayer | foodLayer);
 
         for (int i = 0; i < hitCount; i++)
         {

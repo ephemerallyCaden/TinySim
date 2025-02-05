@@ -10,11 +10,13 @@ public class AgentInitialiser : MonoBehaviour
     [Header("Base Attribute Variables")]
     public float baseSize = 1.0f;
     public float baseSpeed = 2.0f;
-    public Color baseColor = Color.grey;
+    public Color baseColour = Color.grey;
     public float baseVisionDistance = 10f;
     public float baseVisionAngle = 90f;
     public float baseMutationChanceMod = 0.5f;
     public float baseMutationMagnitudeMod = 1.0f;
+    public float baseMaxEnergy = 5000f;
+    public float baseHealth = 100f;
 
     [Header("Genome Variables")]
     public int baseInputNum = 13;
@@ -27,8 +29,6 @@ public class AgentInitialiser : MonoBehaviour
     public enum SpawnPattern { Central, Clusters, Random }
     public SpawnPattern spawnPattern = SpawnPattern.Central;
     public int numberOfClusters = 5;
-
-    private void Start() => InitialiseAgents();
 
     public void InitialiseAgents()
     {
@@ -70,6 +70,7 @@ public class AgentInitialiser : MonoBehaviour
     {
         for (int i = 0; i < initialAgentCount; i++)
             CreateBaseAgent(getPosition());
+            
     }
 
     private void CreateBaseAgent(Vector3 position)
@@ -79,14 +80,16 @@ public class AgentInitialiser : MonoBehaviour
 
         agent.size = baseSize;
         agent.speed = baseSpeed;
-        agent.color = baseColor;
+        agent.colour = baseColour;
         agent.visionDistance = baseVisionDistance;
         agent.visionAngle = baseVisionAngle;
-
+        agent.health = baseHealth;
+        agent.maxEnergy = baseMaxEnergy;
+        agent.energy = baseMaxEnergy;
         AttributeCrossoverManager.MutateAttributes(
             ref agent.size,
             ref agent.speed,
-            ref agent.color,
+            ref agent.colour,
             ref agent.visionDistance,
             ref agent.visionAngle,
             agent.mutationChanceMod,
@@ -94,16 +97,17 @@ public class AgentInitialiser : MonoBehaviour
         );
 
         Genome baseGenome = GenerateBaseGenome();
-        NeuralNetwork neuralNetwork = new NeuralNetwork(baseGenome);
+        NeuralNetwork baseNetwork = new NeuralNetwork(baseGenome);
 
         agent.genome = baseGenome;
-        agent.network = neuralNetwork;
+        agent.network = baseNetwork;
+
+        AgentManager.instance.CreateAgent(agent);
+
+       Debug.Log("Agent Created"); 
     }
 
-
-
     // Create a Neural Network from the Genome
-
 
     private Genome GenerateBaseGenome()
     {

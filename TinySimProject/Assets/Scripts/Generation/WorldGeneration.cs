@@ -15,12 +15,11 @@ public class WorldGeneration : MonoBehaviour
 
     [Header("Food Settings")]
     public int initialFoodCount = 100;
-    public GameObject foodPrefab;
-    public float foodSpawnRadius = 40f;
 
     private void Start()
     {
         // Initialise the world
+
         InitialiseWorld();
     }
 
