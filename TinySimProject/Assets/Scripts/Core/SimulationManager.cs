@@ -2,16 +2,20 @@ using UnityEngine;
 
 public class SimulationManager : MonoBehaviour
 {
-    public static SimulationManager Instance { get; private set; }
+    public static SimulationManager instance { get; private set; }
     [Header("Simulation Settings")]
     public float simulationSpeed = 1f; // Controls how fast the simulation runs
     public bool isPaused = false;
+    public float worldTime = 0f;
 
+    //Simulation Settings
+    public float globalMutationChance = 0.05f;
+    public float globalMutationMagnitude = 0.1f;
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
         }
         else
         {
@@ -24,13 +28,14 @@ public class SimulationManager : MonoBehaviour
 
         // Progress the simulation
         float deltaTime = Time.fixedDeltaTime * simulationSpeed;
+        worldTime += deltaTime;
         StepSimulation(deltaTime);
     }
 
     public void StepSimulation(float deltaTime)
     {
         // Update all simulation components
-        //AgentManager.Instance.UpdateAgents(deltaTime);
+        AgentManager.instance.UpdateAgents(deltaTime);
         //EnvironmentManager.Instance.UpdateEnvironment(deltaTime);
     }
 

@@ -1,14 +1,25 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Node
 {
     public int id;
-    public double activation; //The value of the node
+    public NodeType type;
     public List<Connection> incoming = new List<Connection>();
+    public double activation; //The value of the node
+    public double bias;
+    public Func<double, double> activationFunction;
+
+    public Node(int _id, NodeType _type, double _bias, Func<double, double> _func)
+    {
+        id = _id;
+        type = _type;
+        incoming = new List<Connection>();
+        activation = 0.0;
+        bias = _bias;
+        activationFunction = _func;
+    }
 
 }
 
@@ -31,6 +42,8 @@ public class NeuralNetwork
     private List<Node> nodes;
     private List<Connection> connections;
     private List<Node> evaluationOrder;
+    public List<Node> inputNodes;
+    public List<Node> outputNodes;
 
     public NeuralNetwork(Genome genome)
     {
@@ -41,10 +54,21 @@ public class NeuralNetwork
     private void BuildNetworkFromGenome(Genome genome)
     {
         Dictionary<int, Node> nodeMap = new Dictionary<int, Node>();
+        inputNodes = new List<Node>();
+        outputNodes = new List<Node>();
 
         foreach (var nodeGene in genome.nodeGenes)
         {
-            nodeMap[nodeGene.id] = new Node();
+            Node node = new Node(
+                nodeGene.id,
+                nodeGene.type,
+                nodeGene.bias,
+                nodeGene.activationFunction
+            );
+            nodeMap[nodeGene.id] = node;
+
+            if (nodeGene.type == NodeType.Input) inputNodes.Add(node);
+            if (nodeGene.type == NodeType.Output) outputNodes.Add(node);
         }
 
         connections = new List<Connection>();
@@ -57,7 +81,7 @@ public class NeuralNetwork
                     connectionGene.weight,
                     true
                 );
-                nodeMap[connection.link.source.id].incoming.Add(connection);
+                nodeMap[connection.link.target].incoming.Add(connection);
                 connections.Add(connection);
             }
         }
@@ -67,58 +91,100 @@ public class NeuralNetwork
     private void BuildEvaluationOrder()
     {
         evaluationOrder = new List<Node>();
-        Dictionary<int, int> inDegree = new Dictionary<int, int>();
+        Dictionary<int, Node> nodeMap = new Dictionary<int, Node>();
 
-        // Initialize in-degree for each node
+        // Map node IDs for quick access
         foreach (var node in nodes)
         {
-            inDegree[node.id] = 0;
+            nodeMap[node.id] = node;
         }
 
-        // Count incoming connections (in-degree) for each node
-        foreach (var connection in connections)
+        // Step 1: Count incoming dependencies for each node
+        Dictionary<Node, int> dependencyCount = new Dictionary<Node, int>();
+        foreach (var node in nodes)
         {
-            if (connection.enabled)
-            {
-                inDegree[connection.link.target.id]++;
-            }
+            dependencyCount[node] = node.incoming.Count;
         }
 
-        // Queue for nodes with zero in-degree (ready to evaluate)
+        // Step 2: Initialize queue with nodes that have no dependencies (input/bias nodes)
         Queue<Node> readyNodes = new Queue<Node>();
-
         foreach (var node in nodes)
         {
-            if (inDegree[node.id] == 0)
+            if (dependencyCount[node] == 0)
             {
                 readyNodes.Enqueue(node);
             }
         }
 
-        // Topological sort
-        int processedNodes = 0;
+        // Step 3: Process nodes in topological order
         while (readyNodes.Count > 0)
         {
             Node currentNode = readyNodes.Dequeue();
             evaluationOrder.Add(currentNode);
-            processedNodes++;
 
-            foreach (var connection in currentNode.incoming)
+            // Reduce dependency counts for target nodes of outgoing connections
+            foreach (var connection in connections)
             {
-                inDegree[connection.link.source.id]--;
-                if (inDegree[connection.link.source.id] == 0)
+                if (connection.link.source == currentNode.id && connection.enabled)
                 {
-                    Node sourceNode = nodes.Find(n => n.id == connection.link.source.id);
-                    readyNodes.Enqueue(sourceNode);
+                    Node targetNode = nodeMap[connection.link.target];
+                    dependencyCount[targetNode]--;
+
+                    if (dependencyCount[targetNode] == 0)
+                    {
+                        readyNodes.Enqueue(targetNode);
+                    }
                 }
             }
         }
 
-        // Cycle detection
-        if (processedNodes != nodes.Count)
+        // Step 4: Cycle detection
+        if (evaluationOrder.Count != nodes.Count)
         {
-            Debug.LogError("Cycle detected: Cannot evaluate neural network.");
+            Debug.LogError("Cycle detected in neural network topology!!");
         }
+    }
+
+    public double[] FeedForward(double[] inputValues)
+    {
+
+        // Assign input activations
+        for (int i = 0; i < inputNodes.Count; i++)
+        {
+            inputNodes[i].activation = inputValues[i];
+        }
+
+        // Evaluate nodes in topological order
+        for (int i = 0; i < evaluationOrder.Count; i++)
+        {
+            Node node = evaluationOrder[i];
+            if (node.type != NodeType.Input)
+            {
+                double sum = node.bias;
+                var incoming = node.incoming;
+
+                // Fast iteration using for-loop
+                for (int j = 0; j < incoming.Count; j++)
+                {
+                    var c = incoming[j];
+                    if (c.enabled)
+                    {
+                        Node source = nodes.Find(n => n.id == c.link.source);
+                        sum += source.activation * c.weight;
+                    }
+                }
+                node.activation = node.activationFunction(sum);
+            }
+        }
+
+        // Collect output activations
+        double[] outputValues = new double[outputNodes.Count];
+        for (int i = 0; i < outputValues.Length; i++)
+        {
+            outputValues[i] = outputNodes[i].activation;
+        }
+
+        return outputValues;
     }
 }
 
