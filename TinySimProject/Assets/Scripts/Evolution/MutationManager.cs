@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 public class MutationManager
 {
-    private static readonly System.Random random = new System.Random();
+    private static readonly Random random = new Random();
 
     public static void Mutate(Genome genome, float mutationChance, float mutationMagnitude)
     {
         int mutationCount = (int)Math.Round(8 * random.NextDouble() * mutationMagnitude);
 
-        for (int i = 0; i < mutationCount; i++)
+        for (int i = 0; i < 128; i++)
         {
             if (random.NextDouble() < mutationChance)
             {
@@ -56,30 +56,42 @@ public class MutationManager
     //Add a new random connection
     private static void AddRandomConnection(Genome genome)
     {
-        // Select two random nodes
-        var node1 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
-        var node2 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
+        if (genome.nodeGenes.Count < 2) return; // Ensure at least two nodes exist
 
-        // Ensure nodes are not the same and connection doesn't already exist
-        if (node1.id != node2.id &&
-            !genome.connectionGenes.Exists(c => c.linkid.source == node1.id && c.linkid.target == node2.id))
+        NodeGene node1, node2;
+        int attempts = 0, maxAttempts = 10;
+
+        do
         {
-            // Create a new connection
-            var link = new LinkID
-            {
-                id = InnovationTracker.GetInnovation(node1.id, node2.id),
-                source = node1.id,
-                target = node2.id
-            };
+            node1 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
+            node2 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
+            attempts++;
 
-            genome.connectionGenes.Add(new ConnectionGene
-            {
-                linkid = link,
-                weight = random.NextDouble() * 2 - 1, // Random weight between -1 and 1
-                enabled = true
-            });
-        }
+            // Ensure valid node types and avoid loops
+        } while ((node1.id == node2.id ||
+                  (node1.type == NodeType.Output) ||
+                  (node2.type == NodeType.Input) ||
+                  genome.connectionGenes.Exists(c => c.linkid.source == node1.id && c.linkid.target == node2.id))
+                 && attempts < maxAttempts);
+
+        if (attempts >= maxAttempts) return; // Avoid infinite loops if no valid nodes are found
+
+        // Create a new connection
+        var link = new LinkID
+        {
+            id = InnovationTracker.GetInnovation(node1.id, node2.id),
+            source = node1.id,
+            target = node2.id
+        };
+
+        genome.connectionGenes.Add(new ConnectionGene
+        {
+            linkid = link,
+            weight = random.NextDouble() * 2 - 1, // Random weight between -1 and 1
+            enabled = true
+        });
     }
+
 
     // Disable random connection
     private static void DisableRandomConnection(Genome genome)
@@ -92,7 +104,7 @@ public class MutationManager
 
             // Check if the target node has no incoming connections
             var targetNode = genome.nodeGenes.FirstOrDefault(n => n.id == connection.linkid.target);
-            if (targetNode != null && !genome.connectionGenes.Any(c => c.linkid.target == targetNode.id && c.enabled))
+            if (targetNode != null && targetNode.type == NodeType.Hidden && !genome.connectionGenes.Any(c => c.linkid.target == targetNode.id && c.enabled))
             {
                 // Remove the loose node and its outgoing connections
                 genome.nodeGenes.Remove(targetNode);

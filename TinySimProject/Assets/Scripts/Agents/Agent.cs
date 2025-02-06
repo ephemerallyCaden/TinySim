@@ -58,7 +58,7 @@ public class Agent : MonoBehaviour
     public float reproductionCooldown;      // Time required between reproductions
     public float reproductionEnergyCost;    // Energy required to reproduce
     public float maxReproductionCooldown;   // Mutates to change reproductive strategy
-    public float reproductionRange = 2.0f;  // Max distance to mate with another agent
+    public float reproductionRange = 8.0f;  // Max distance to mate with another agent
     private void Start()
     {
         //Variable Calculations
@@ -172,10 +172,10 @@ public class Agent : MonoBehaviour
 
             if (hit.gameObject == gameObject) continue; // Skip self-detection
 
-            Vector3 directionToTarget = hit.gameObject.transform.position - position;
+            Vector3 directionToTarget = hit.transform.position - position;
 
-            float angleToTarget = Vector3.Angle(transform.forward, directionToTarget);
-            if (angleToTarget <= visionAngle / 2)
+            float angleToTarget = Vector3.Angle(transform.up, directionToTarget);
+            if (angleToTarget <= visionAngle)
             {
                 float distanceToTarget = directionToTarget.magnitude;
                 Debug.Log(angleToTarget);
@@ -297,18 +297,16 @@ public class Agent : MonoBehaviour
     }
 
     // Debugging: Draw vision cone in the editor
-    private void OnDrawGizmosSelected()
+    void OnDrawGizmos()
     {
-        // Draw vision distance
         Gizmos.color = Color.yellow;
+
         Gizmos.DrawWireSphere(transform.position, visionDistance);
 
-        // Draw vision cone
-        Vector3 leftDir = Quaternion.Euler(0, -visionAngle / 2, 0) * transform.forward;
-        Vector3 rightDir = Quaternion.Euler(0, visionAngle / 2, 0) * transform.forward;
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(transform.position, transform.position + leftDir * visionDistance);
-        Gizmos.DrawLine(transform.position, transform.position + rightDir * visionDistance);
+        Vector3 leftBoundary = Quaternion.Euler(0, 0, -visionAngle) * transform.up * visionDistance;
+        Vector3 rightBoundary = Quaternion.Euler(0, 0, visionAngle) * transform.up * visionDistance;
+        Gizmos.DrawLine(transform.position, transform.position + leftBoundary);
+        Gizmos.DrawLine(transform.position, transform.position + rightBoundary);
     }
+
 }

@@ -215,7 +215,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6ef915db7ab03b4e80bcf74fae7814c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  agentPrefab: {fileID: 2473227898240800564, guid: f77df5bbf76f643449809d83653364ee, type: 3}
   agents: []
+  currentAgentID: 0
 --- !u!4 &1298513615
 Transform:
   m_ObjectHideFlags: 0
@@ -279,7 +281,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dba61b2f3787da4da42f51ad346153a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  agentPrefab: {fileID: 2473227898240800564, guid: f77df5bbf76f643449809d83653364ee, type: 3}
   initialAgentCount: 50
   baseSize: 1
   baseSpeed: 2
@@ -290,6 +291,8 @@ MonoBehaviour:
   baseMutationMagnitudeMod: 1
   baseMaxEnergy: 5000
   baseHealth: 100
+  baseMaxReproductionCooldown: 30
+  baseReproductionEnergyCost: 30
   baseInputNum: 13
   baseOutputNum: 3
   spawnRadius: 20

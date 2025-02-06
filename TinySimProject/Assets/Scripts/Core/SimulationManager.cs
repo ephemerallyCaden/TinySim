@@ -9,8 +9,8 @@ public class SimulationManager : MonoBehaviour
     public float worldTime = 0f;
 
     //Simulation Settings
-    public float globalMutationChance = 0.05f;
-    public float globalMutationMagnitude = 0.1f;
+    public float globalMutationChance = 0.5f;
+    public float globalMutationMagnitude = 0.5f;
     private void Awake()
     {
         if (instance == null)

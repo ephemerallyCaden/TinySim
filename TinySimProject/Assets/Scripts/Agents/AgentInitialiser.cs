@@ -12,11 +12,11 @@ public class AgentInitialiser : MonoBehaviour
     public Color baseColour = Color.grey;
     public float baseVisionDistance = 10f;
     public float baseVisionAngle = 90f;
-    public float baseMutationChanceMod = 0.5f;
+    public float baseMutationChanceMod = 1f;
     public float baseMutationMagnitudeMod = 1.0f;
     public float baseMaxEnergy = 5000f;
     public float baseHealth = 100f;
-    public float baseMaxReproductionCooldown = 30f;
+    public float baseMaxReproductionCooldown = 10f;
     public float baseReproductionEnergyCost = 30f;
 
     [Header("Genome Variables")]
@@ -24,7 +24,7 @@ public class AgentInitialiser : MonoBehaviour
     public int baseOutputNum = 3;
 
 
-    public float spawnRadius = 20f;
+    public float spawnRadius = 10f;
     public Vector3 spawnCenter = Vector3.zero;
 
     public enum SpawnPattern { Central, Clusters, Random }
