@@ -3,7 +3,6 @@ Shader "Unlit/AgentColour2D"
     Properties
     {
         _Color ("Color", Color) = (1,1,1,1)
-        _Size ("Size", Float) = 1.0
     }
     SubShader
     {
@@ -19,7 +18,6 @@ Shader "Unlit/AgentColour2D"
             CGPROGRAM
             #pragma multi_compile_instancing
             #pragma instancing_options assumeuniformscaling
-
             #pragma vertex vert
             #pragma fragment frag
 
@@ -28,28 +26,32 @@ Shader "Unlit/AgentColour2D"
             struct appdata
             {
                 float4 vertex : POSITION;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
             {
                 float4 vertex : SV_POSITION;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            float4 _Color[1023];  // Array to handle multiple colors per instance
-            float _Size;
+            UNITY_INSTANCING_BUFFER_START(Props)
+                UNITY_DEFINE_INSTANCED_PROP(float4, _Color)  // Per-instance color
+            UNITY_INSTANCING_BUFFER_END(Props)
 
-            v2f vert(appdata v, uint instanceID : SV_InstanceID)
+            v2f vert(appdata v)
             {
                 v2f o;
-                // Scale the object by the size factor
-                v.vertex.xyz *= _Size;
+                UNITY_SETUP_INSTANCE_ID(v);
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                UNITY_TRANSFER_INSTANCE_ID(v, o);
                 return o;
             }
 
-            fixed4 frag(v2f i, uint instanceID : SV_InstanceID) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
-                return _Color[instanceID];  // Use color based on instanceID
+                UNITY_SETUP_INSTANCE_ID(i);
+                return UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
             }
             ENDCG
         }

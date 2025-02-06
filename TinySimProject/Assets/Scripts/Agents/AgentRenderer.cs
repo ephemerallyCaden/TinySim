@@ -9,7 +9,7 @@ public class AgentRenderer2D : MonoBehaviour
     private List<Matrix4x4> matrices = new List<Matrix4x4>();
     private List<Vector4> colours = new List<Vector4>();
 
-    private List<Agent> agents; // Reference to your agents
+    private List<Agent> agentsCopy; // Reference to agents in agentsManager
 
     private void Start()
     {
@@ -20,12 +20,12 @@ public class AgentRenderer2D : MonoBehaviour
     private void Update()
     {
         // Get the list of agents from the AgentManager
-        agents = AgentManager.instance.agents;
+        agentsCopy = AgentManager.instance.agents;
         matrices.Clear();
         colours.Clear();
 
         // Loop through all the agents and create the transformation matrix and color
-        foreach (Agent agent in agents)
+        foreach (Agent agent in agentsCopy)
         {
             // Create transformation matrix (position, rotation, and size)
             Matrix4x4 matrix = Matrix4x4.TRS(
@@ -40,7 +40,7 @@ public class AgentRenderer2D : MonoBehaviour
 
         // Set up the material property block to pass per-instance properties
         MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-        
+
         // Set the colors for each instance (agents)
         propertyBlock.SetVectorArray("_Color", colours);
 

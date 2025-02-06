@@ -3,46 +3,50 @@ using UnityEngine;
 
 public static class ReproductionManager
 {
-    public static Agent Reproduce(Agent parent1, Agent parent2)
+    public static void Reproduce(Agent parent1, Agent parent2, Vector3 position)
     {
-        // Create new child agent
-        Agent child = new GameObject("ChildAgent").AddComponent<Agent>();
-
         // Crossover genomes
-        child.genome = CrossoverManager.Crossover(parent1.genome, parent2.genome);
+        Genome childGenome = CrossoverManager.Crossover(parent1.genome, parent2.genome);
 
         // Crossover attributes
-        var (size, speed, colour, visionDistance, visionAngle) = AttributeCrossoverManager.CrossoverAttributes(parent1, parent2);
-        child.size = size;
-        child.speed = speed;
-        child.colour = colour;
-        child.visionDistance = visionDistance;
-        child.visionAngle = visionAngle;
+        var (size, speed, colour, visionDistance, visionAngle, mutationChanceMod, mutationMagnitudeMod, maxReproductionCooldown, reproductionEnergyCost) =
+            AttributeCrossoverManager.CrossoverAttributes(parent1, parent2);
 
         // Mutate genome
-        MutationManager.Mutate(child.genome, parent1.mutationChance, parent1.mutationMagnitude);
+        MutationManager.Mutate(childGenome, parent1.mutationChance, parent1.mutationMagnitude);
 
         // Mutate attributes
         AttributeCrossoverManager.MutateAttributes(
-            ref child.size,
-            ref child.speed,
-            ref child.colour,
-            ref child.visionDistance,
-            ref child.visionAngle,
+            ref size,
+            ref speed,
+            ref colour,
+            ref visionDistance,
+            ref visionAngle,
+            ref mutationChanceMod,
+            ref mutationMagnitudeMod,
+            ref maxReproductionCooldown,
+            ref reproductionEnergyCost,
             parent1.mutationChance,
             parent1.mutationMagnitude
         );
 
-        // Initializ=se offspring neural network
-        child.network = new NeuralNetwork(child.genome);
+        // Initialize offspring neural network
+        NeuralNetwork childNetwork = new NeuralNetwork(childGenome);
 
-        // Set other properties
-        child.generation = parent1.generation+=1;
-        child.mutationChance = parent1.mutationChance;
-        child.mutationMagnitude = parent1.mutationMagnitude;
-        child.maxEnergy = parent1.maxEnergy;
-        child.movementCost = parent1.movementCost;
-
-        return child;
+        // Create offspring agent
+        AgentManager.instance.CreateAgent(
+            position,
+            size,
+            speed,
+            colour,
+            visionDistance,
+            visionAngle,
+            100f, //This is the health
+            parent1.maxEnergy,  // Starts at full energy
+            maxReproductionCooldown,
+            reproductionEnergyCost,
+            childGenome,
+            childNetwork
+        );
     }
 }

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class AgentInitialiser : MonoBehaviour
 {
-    public GameObject agentPrefab;
     public int initialAgentCount = 50;
 
     [Header("Base Attribute Variables")]
@@ -17,6 +16,8 @@ public class AgentInitialiser : MonoBehaviour
     public float baseMutationMagnitudeMod = 1.0f;
     public float baseMaxEnergy = 5000f;
     public float baseHealth = 100f;
+    public float baseMaxReproductionCooldown = 30f;
+    public float baseReproductionEnergyCost = 30f;
 
     [Header("Genome Variables")]
     public int baseInputNum = 13;
@@ -70,42 +71,37 @@ public class AgentInitialiser : MonoBehaviour
     {
         for (int i = 0; i < initialAgentCount; i++)
             CreateBaseAgent(getPosition());
-            
+
     }
 
     private void CreateBaseAgent(Vector3 position)
     {
-        GameObject agentObject = Instantiate(agentPrefab, position, Quaternion.identity);
-        Agent agent = agentObject.GetComponent<Agent>();
-
-        agent.size = baseSize;
-        agent.speed = baseSpeed;
-        agent.colour = baseColour;
-        agent.visionDistance = baseVisionDistance;
-        agent.visionAngle = baseVisionAngle;
-        agent.health = baseHealth;
-        agent.maxEnergy = baseMaxEnergy;
-        agent.energy = baseMaxEnergy;
-        AttributeCrossoverManager.MutateAttributes(
-            ref agent.size,
-            ref agent.speed,
-            ref agent.colour,
-            ref agent.visionDistance,
-            ref agent.visionAngle,
-            agent.mutationChanceMod,
-            agent.mutationMagnitudeMod
-        );
-
+        // Generate a base genome and neural network
         Genome baseGenome = GenerateBaseGenome();
         NeuralNetwork baseNetwork = new NeuralNetwork(baseGenome);
 
-        agent.genome = baseGenome;
-        agent.network = baseNetwork;
-
-        AgentManager.instance.CreateAgent(agent);
-
-       Debug.Log("Agent Created"); 
+        // Call CreateAgent with base parameters
+        AgentManager.instance.CreateAgent(
+            position,
+            baseSize,
+            baseSpeed,
+            baseColour,
+            baseVisionDistance,
+            baseVisionAngle,
+            baseHealth,
+            baseMaxEnergy,
+            baseMaxReproductionCooldown,
+            baseReproductionEnergyCost,
+            baseGenome,
+            baseNetwork
+        );
+        Debug.Log("Agent Created");
     }
+
+
+
+
+
 
     // Create a Neural Network from the Genome
 
@@ -121,7 +117,7 @@ public class AgentInitialiser : MonoBehaviour
 
         for (int o = 0; o < baseOutputNum; o++)
         {
-            nodeGenes.Add(new NodeGene(baseInputNum + o - 1, NodeType.Output, 0.0, ActivationFunctions.Sigmoid));
+            nodeGenes.Add(new NodeGene(baseInputNum + o - 1, NodeType.Output, 0.0, ActivationFunctions.ReLU));
         }
         List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
 

@@ -4,7 +4,18 @@ using UnityEngine;
 public static class AttributeCrossoverManager
 {
     // Crossover attributes from two parents
-    public static (float size, float speed, Color colour, float visionDistance, float visionAngle) CrossoverAttributes(Agent parent1, Agent parent2)
+    public static (
+        float size,
+        float speed,
+        Color colour,
+        float visionDistance,
+        float visionAngle,
+        float mutationChanceMod,
+        float mutationMagnitudeMod,
+        float maxReproductionCooldown,
+        float reproductionEnergyCost
+        )
+        CrossoverAttributes(Agent parent1, Agent parent2)
     {
         // Average the attributes
         float size = (parent1.size + parent2.size) / 2f;
@@ -12,12 +23,28 @@ public static class AttributeCrossoverManager
         Color colour = Color.Lerp(parent1.colour, parent2.colour, 0.5f);
         float visionDistance = (parent1.visionDistance + parent2.visionDistance) / 2f;
         float visionAngle = (parent1.visionAngle + parent2.visionAngle) / 2f;
+        float mutationChanceMod = (parent1.mutationChanceMod + parent2.mutationChanceMod) / 2f;
+        float mutationMagnitudeMod = (parent1.mutationMagnitudeMod + parent2.mutationMagnitudeMod) / 2f;
+        float maxReproductionCooldown = (parent1.maxReproductionCooldown + parent2.maxReproductionCooldown) / 2f;
+        float reproductionEnergyCost = (parent1.reproductionEnergyCost + parent2.reproductionEnergyCost) / 2f;
 
-        return (size, speed, colour, visionDistance, visionAngle);
+        return (size, speed, colour, visionDistance, visionAngle, mutationChanceMod, mutationMagnitudeMod, maxReproductionCooldown, reproductionEnergyCost);
     }
 
     // Mutate attributes
-    public static void MutateAttributes(ref float size, ref float speed, ref Color colour, ref float visionDistance, ref float visionAngle, float mutationChance, float mutationMagnitude)
+    public static void MutateAttributes(
+        ref float size,
+        ref float speed,
+        ref Color colour,
+        ref float visionDistance,
+        ref float visionAngle,
+        ref float mutationChanceMod,
+        ref float mutationMagnitudeMod,
+        ref float maxReproductionCooldown,
+        ref float reproductionEnergyCost,
+        float mutationChance,
+        float mutationMagnitude
+        )
     {
         System.Random random = new System.Random();
         // Mutate size
@@ -58,6 +85,25 @@ public static class AttributeCrossoverManager
         {
             visionAngle += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
             visionAngle = Mathf.Clamp(visionAngle, 0f, 360f); // Clamp to reasonable values
+        }
+
+        //MutationChance and MutationMag Modifiers
+        if (random.NextDouble() < mutationChance)
+        {
+            mutationChanceMod += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
+            mutationChanceMod = Mathf.Clamp(mutationChanceMod, 0.01f, 1f); // Clamp to reasonable values
+
+            mutationMagnitudeMod += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
+            mutationMagnitudeMod = Mathf.Clamp(mutationMagnitudeMod, 0.01f, 10f); // Clamp to reasonable values
+        }
+
+        if (random.NextDouble() < mutationChance)
+        {
+            maxReproductionCooldown += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
+            maxReproductionCooldown = Mathf.Clamp(maxReproductionCooldown, 1f, 400f); // Clamp to reasonable values
+
+            reproductionEnergyCost += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
+            reproductionEnergyCost = Mathf.Clamp(reproductionEnergyCost, 20f, 100f); // Clamp to reasonable values
         }
     }
 }

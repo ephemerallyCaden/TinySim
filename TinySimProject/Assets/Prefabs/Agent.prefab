@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7861245983405573233}
   - component: {fileID: 4650078792896293541}
   - component: {fileID: 6034943370163671943}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Agent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67,7 +67,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.55
+  m_Radius: 1
 --- !u!114 &6034943370163671943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,6 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15f5e51c81cf62d4e90c9d6d75553c26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  id: 0
   position: {x: 0, y: 0, z: 0}
   size: 0
   speed: 0
@@ -109,3 +110,7 @@ MonoBehaviour:
   foodLayer:
     serializedVersion: 2
     m_Bits: 128
+  reproductionCooldown: 0
+  reproductionEnergyCost: 0
+  maxReproductionCooldown: 0
+  reproductionRange: 2

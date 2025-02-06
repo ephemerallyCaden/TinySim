@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Agent : MonoBehaviour
 {
+    public int id;
     // Agent Characteristics (can mutate)
     public Vector3 position;
     public float size;                // Size of the agent
@@ -41,8 +42,8 @@ public class Agent : MonoBehaviour
     public float desireValue;         // Desire value (used for decision-making)
 
     // Environment Sensors
-    public LayerMask agentLayer;   // Layer for agents
-    public LayerMask foodLayer;       // Layer for food
+    public LayerMask agentLayer = 8;   // Layer for agents
+    public LayerMask foodLayer = 7;       // Layer for food
 
     // Closest objects
     private Agent closestAgent;
@@ -51,15 +52,19 @@ public class Agent : MonoBehaviour
     float closestAgentAngle;
     float closestFoodDistance;
     float closestFoodAngle;
-
-    // Preallocated collider buffer for vision detection
     private Collider2D[] hitList = new Collider2D[20];
 
+    // Reproduction Variables
+    public float reproductionCooldown;      // Time required between reproductions
+    public float reproductionEnergyCost;    // Energy required to reproduce
+    public float maxReproductionCooldown;   // Mutates to change reproductive strategy
+    public float reproductionRange = 2.0f;  // Max distance to mate with another agent
     private void Start()
     {
         //Variable Calculations
-        metabolismCost = 0.15f*speed*size;
+        metabolismCost = 0.15f * speed * size;
         energy = maxEnergy;
+        reproductionCooldown = maxReproductionCooldown;
         // Global mutation parameters from the SimulationManager
         float globalMutationChance = SimulationManager.instance.globalMutationChance;
         float globalMutationMagnitude = SimulationManager.instance.globalMutationMagnitude;
@@ -80,7 +85,7 @@ public class Agent : MonoBehaviour
     // Preallocate the input list
     private void InitialiseNetworkVariables()
     {
-        
+
         inputs = new double[network.inputNodes.Count]; // Preallocate for 13 inputs
         inputs[0] = 1.0;              // Control input (always 1)
         for (int i = 1; i < network.inputNodes.Count; i++)
@@ -114,6 +119,14 @@ public class Agent : MonoBehaviour
 
         // Execute outputs
         ExecuteOutputs(deltaTime);
+
+        //Reproduction
+        reproductionCooldown -= deltaTime;
+        if (reproductionCooldown <= 0)
+        {
+            AttemptReproduction();
+        }
+
     }
 
     // Update energy and health
@@ -157,22 +170,23 @@ public class Agent : MonoBehaviour
         {
             Collider2D hit = hitList[i];
 
-            if (hit.gameObject == this.gameObject) continue; // Skip self-detection
+            if (hit.gameObject == gameObject) continue; // Skip self-detection
 
-            Vector3 directionToTarget = hit.transform.position - position;
+            Vector3 directionToTarget = hit.gameObject.transform.position - position;
 
             float angleToTarget = Vector3.Angle(transform.forward, directionToTarget);
             if (angleToTarget <= visionAngle / 2)
             {
                 float distanceToTarget = directionToTarget.magnitude;
-
+                Debug.Log(angleToTarget);
                 // Detect other agents (creatures)
-                Agent currentAgent = hit.GetComponent<Agent>();
+                Agent currentAgent = hit.gameObject.GetComponent<Agent>();
                 if (currentAgent != null && distanceToTarget < closestAgentDistance)
                 {
                     closestAgent = currentAgent;
                     closestAgentDistance = distanceToTarget;
                     closestAgentAngle = angleToTarget;
+                    Debug.Log(distanceToTarget);
                 }
 
                 // Detect food
@@ -238,13 +252,45 @@ public class Agent : MonoBehaviour
 
         // Turn the agent
         transform.Rotate(Vector3.up, turningRate * 100 * deltaTime);
+
+        position = transform.position;
+
+    }
+
+    private void AttemptReproduction()
+    {
+        if (closestAgent == null || closestAgentDistance > reproductionRange) return;
+        if (!isFertile() || !closestAgent.isFertile()) return;
+
+        // Ensure the older agent is the one initiating reproduction
+        Agent parent1 = age >= closestAgent.age ? this : closestAgent;
+        Agent parent2 = parent1 == this ? closestAgent : this;
+
+        Vector3 offspringPosition = (parent1.position + parent2.position) / 2;
+
+        // Modify offspring size & energy based on reproductive strategy
+        float offspringSize = Mathf.Clamp((parent1.size + parent2.size) / 2 * (reproductionEnergyCost / 30f), 0.5f, 3f);
+        float offspringEnergy = Mathf.Clamp((parent1.maxEnergy + parent2.maxEnergy) / 2 * (reproductionEnergyCost / 30f), 10f, 100f);
+
+        // Create offspring
+        ReproductionManager.Reproduce(parent1, parent2, offspringPosition);
+
+        // Apply reproduction costs
+        parent1.energy -= parent1.reproductionEnergyCost;
+        parent2.energy -= parent2.reproductionEnergyCost;
+        parent1.reproductionCooldown = maxReproductionCooldown;
+        parent2.reproductionCooldown = maxReproductionCooldown;
+    }
+    private bool isFertile()
+    {
+        return reproductionCooldown <= 0 && energy > reproductionEnergyCost;
     }
 
     // Handle agent death
     private void Die()
     {
         // Notify AgentManager or other systems
-        AgentManager.instance.RemoveAgent(this);
+        AgentManager.instance.AgentListRemove(this);
 
         // Destroy the agent
         Destroy(gameObject);
