@@ -8,6 +8,7 @@ public class Agent : MonoBehaviour
     public int id;
     // Agent Characteristics (can mutate)
     public Vector3 position;
+    public float rotation;
     public float size;                // Size of the agent
     public float speed;               // Base speed
     public float visionDistance = 10f; // How far the agent can see
@@ -38,7 +39,9 @@ public class Agent : MonoBehaviour
 
     // Outputs
     public float movementSpeed;       // Movement speed (-1 to 1)
+    public float speedMax = 10f;
     public float turningRate;         // Turning rate (-1 to 1)
+    public float turnRateMax = 10f;
     public float desireValue;         // Desire value (used for decision-making)
 
     // Environment Sensors
@@ -53,6 +56,10 @@ public class Agent : MonoBehaviour
     float closestFoodDistance;
     float closestFoodAngle;
     private Collider2D[] hitList = new Collider2D[20];
+
+    //Visuals
+    public int eyeNumber;
+
 
     // Reproduction Variables
     public float reproductionCooldown;      // Time required between reproductions
@@ -73,6 +80,7 @@ public class Agent : MonoBehaviour
         mutationChance = globalMutationChance * (1 + mutationChanceMod);
         mutationMagnitude = globalMutationMagnitude * (1 + mutationMagnitudeMod);
 
+        eyeNumber = ((int)visionDistance + 16) / 16 * 2;
         // Preallocate inputs
         InitialiseNetworkVariables();
 
@@ -165,7 +173,7 @@ public class Agent : MonoBehaviour
 
         // Detect objects within vision range
         int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hitList, agentLayer | foodLayer);
-
+        Vector3 transformRight = transform.right;
         for (int i = 0; i < hitCount; i++)
         {
             Collider2D hit = hitList[i];
@@ -174,7 +182,7 @@ public class Agent : MonoBehaviour
 
             Vector3 directionToTarget = hit.transform.position - position;
 
-            float angleToTarget = Vector3.Angle(transform.up, directionToTarget);
+            float angleToTarget = Vector3.Angle(transformRight, directionToTarget);
             if (angleToTarget <= visionAngle)
             {
                 float distanceToTarget = directionToTarget.magnitude;
@@ -246,12 +254,19 @@ public class Agent : MonoBehaviour
     private void ExecuteOutputs(float deltaTime)
     {
         // Move the agent
-        transform.Translate(transform.up * movementSpeed * speed * deltaTime);
+        movementSpeed = Mathf.Clamp(movementSpeed, 0, speedMax);
+        Vector3 mov = transform.right * movementSpeed * speed * deltaTime * 0.2f;
+
+        transform.Translate(mov);
+        position = transform.position;
 
         // Turn the agent
-        transform.Rotate(Vector3.up, turningRate * 100 * deltaTime);
+        turningRate = Mathf.Clamp(turningRate, -turnRateMax, turnRateMax);
 
-        position = transform.position;
+        rotation += turningRate * deltaTime * 10f;
+        rotation = Mathf.Repeat(rotation, 360);
+        transform.rotation = Quaternion.Euler(0, 0, rotation);
+
 
     }
 
@@ -266,9 +281,9 @@ public class Agent : MonoBehaviour
 
         Vector3 offspringPosition = (parent1.position + parent2.position) / 2;
 
-        // Modify offspring size & energy based on reproductive strategy
-        float offspringSize = Mathf.Clamp((parent1.size + parent2.size) / 2 * (reproductionEnergyCost / 30f), 0.5f, 3f);
-        float offspringEnergy = Mathf.Clamp((parent1.maxEnergy + parent2.maxEnergy) / 2 * (reproductionEnergyCost / 30f), 10f, 100f);
+        // // Modify offspring size & energy based on reproductive strategy
+        // float offspringSize = Mathf.Clamp((parent1.size + parent2.size) / 2 * (reproductionEnergyCost / 30f), 0.5f, 3f);
+        // float offspringEnergy = Mathf.Clamp((parent1.maxEnergy + parent2.maxEnergy) / 2 * (reproductionEnergyCost / 30f), 10f, 100f);
 
         // Create offspring
         ReproductionManager.Reproduce(parent1, parent2, offspringPosition);

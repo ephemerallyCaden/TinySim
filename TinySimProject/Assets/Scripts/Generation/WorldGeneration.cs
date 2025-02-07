@@ -25,6 +25,12 @@ public class WorldGeneration : MonoBehaviour
 
     private void InitialiseWorld()
     {
+        // Generate Terrain
+        //terrainGenerator.GenerateTerrain((int)worldRadius * 2, (int)worldRadius * 2, terrainScale, terrainOffset);
+
+        // Generate Temperature Map
+        //temperatureMap.GenerateTemperatureMap((int)worldRadius * 2, (int)worldRadius * 2, temperatureScale);
+
         // Configure the agent initializer
         agentInitialiser.initialAgentCount = initialAgentPopulation;
         agentInitialiser.spawnPattern = spawnPattern;

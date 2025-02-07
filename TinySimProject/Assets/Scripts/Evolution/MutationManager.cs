@@ -16,17 +16,19 @@ public class MutationManager
             if (mutationValue < mutationChance + 10)
             {
                 double mutationType = random.NextDouble();
-                Debug.Log(mutationValue);
                 if (mutationType < 0.7)
                 {
                     if (genome.connectionGenes.Count >= 0 && mutationType < 0.5)
                     {
-                        AddRandomConnection(genome);
-                        Debug.Log("AddRandomConnection");
+                        MutateWeights(genome);
+                        Debug.Log("MutateWeights");
                         return;
                     }
-                    MutateWeights(genome);
-                    Debug.Log("MutateWeights");
+
+                    AddRandomConnection(genome);
+                    Debug.Log("AddRandomConnection");
+
+
                 }
                 else if (mutationType < 0.75)
                 {
