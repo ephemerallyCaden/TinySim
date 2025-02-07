@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -7,17 +8,17 @@ public class AgentInitialiser : MonoBehaviour
     public int initialAgentCount = 50;
 
     [Header("Base Attribute Variables")]
-    public float baseSize = 1.0f;
-    public float baseSpeed = 2.0f;
-    public Color baseColour = Color.grey;
-    public float baseVisionDistance = 10f;
-    public float baseVisionAngle = 90f;
-    public float baseMutationChanceMod = 1f;
-    public float baseMutationMagnitudeMod = 1.0f;
-    public float baseMaxEnergy = 5000f;
-    public float baseHealth = 100f;
-    public float baseMaxReproductionCooldown = 10f;
-    public float baseReproductionEnergyCost = 30f;
+    [NonSerialized] public float baseSize = 1.0f;
+    [NonSerialized] public float baseSpeed = 2.0f;
+    [NonSerialized] public Color baseColour = Color.grey;
+    [NonSerialized] public float baseVisionDistance = 10f;
+    [NonSerialized] public float baseVisionAngle = 90f;
+    [NonSerialized] public float baseMutationChanceMod = 1f;
+    [NonSerialized] public float baseMutationMagnitudeMod = 1f;
+    [NonSerialized] public float baseMaxEnergy = 100f;
+    [NonSerialized] public float baseHealth = 100f;
+    [NonSerialized] public float baseMaxReproductionCooldown = 20f;
+    [NonSerialized] public float baseReproductionEnergyCost = 30f;
 
     [Header("Genome Variables")]
     public int baseInputNum = 13;
@@ -49,8 +50,8 @@ public class AgentInitialiser : MonoBehaviour
 
     private Vector3 GetCircularPosition(Vector3 center, float radius)
     {
-        float angle = Random.Range(0f, Mathf.PI * 2);
-        float distance = Mathf.Sqrt(Random.value) * radius;
+        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2);
+        float distance = Mathf.Sqrt(UnityEngine.Random.value) * radius;
         return center + new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
     }
 
@@ -62,7 +63,7 @@ public class AgentInitialiser : MonoBehaviour
 
         SpawnAgents(() =>
         {
-            Vector3 center = clusterCenters[Random.Range(0, numberOfClusters)];
+            Vector3 center = clusterCenters[UnityEngine.Random.Range(0, numberOfClusters)];
             return GetCircularPosition(center, spawnRadius / 2);
         });
     }
@@ -83,11 +84,13 @@ public class AgentInitialiser : MonoBehaviour
         // Call CreateAgent with base parameters
         AgentManager.instance.CreateAgent(
             position,
-            baseSize,
-            baseSpeed,
+            baseSize + UnityEngine.Random.Range(-0.5f, 0.5f),
+            baseSpeed + UnityEngine.Random.Range(-0.5f, 0.5f),
             baseColour,
             baseVisionDistance,
             baseVisionAngle,
+            baseMutationChanceMod,
+            baseMutationMagnitudeMod,
             baseHealth,
             baseMaxEnergy,
             baseMaxReproductionCooldown,
@@ -95,13 +98,7 @@ public class AgentInitialiser : MonoBehaviour
             baseGenome,
             baseNetwork
         );
-        Debug.Log("Agent Created");
     }
-
-
-
-
-
 
     // Create a Neural Network from the Genome
 
@@ -117,9 +114,12 @@ public class AgentInitialiser : MonoBehaviour
 
         for (int o = 0; o < baseOutputNum; o++)
         {
-            nodeGenes.Add(new NodeGene(baseInputNum + o - 1, NodeType.Output, 0.0, ActivationFunctions.ReLU));
+            nodeGenes.Add(new NodeGene(baseInputNum + o, NodeType.Output, 0.0, ActivationFunctions.ReLU));
         }
         List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
+
+        //LinkID temp = new LinkID(InnovationTracker.GetInnovation(0, 13), 0, 13);
+        //connectionGenes.Add(new ConnectionGene(temp, 0.0, true));
 
         Genome genome = new Genome(nodeGenes, connectionGenes);
         return genome;

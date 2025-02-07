@@ -31,12 +31,8 @@ public class CrossoverManager
             }
 
             // Add the chosen gene to the child
-            child.connectionGenes.Add(new ConnectionGene
-            {
-                linkid = gene.linkid,
-                weight = gene.weight,
-                enabled = gene.enabled
-            });
+            child.connectionGenes.Add(new ConnectionGene(gene.linkid, gene.weight, gene.enabled));
+
         }
 
         return child;

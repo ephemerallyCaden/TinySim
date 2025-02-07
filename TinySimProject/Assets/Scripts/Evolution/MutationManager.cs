@@ -1,38 +1,48 @@
 using System;
 using System.Collections.Generic;
+
 using System.Linq;
+using UnityEngine;
 public class MutationManager
 {
-    private static readonly Random random = new Random();
+    private static readonly System.Random random = new System.Random();
 
     public static void Mutate(Genome genome, float mutationChance, float mutationMagnitude)
     {
-        int mutationCount = (int)Math.Round(8 * random.NextDouble() * mutationMagnitude);
-
-        for (int i = 0; i < 128; i++)
+        int mutationCount = (int)Math.Ceiling(4 * mutationMagnitude);
+        for (int i = 0; i < mutationCount; i++)
         {
-            if (random.NextDouble() < mutationChance)
+            double mutationValue = random.NextDouble();
+            if (mutationValue < mutationChance + 10)
             {
                 double mutationType = random.NextDouble();
-                if (mutationType < 0.4)
+                Debug.Log(mutationValue);
+                if (mutationType < 0.7)
                 {
+                    if (genome.connectionGenes.Count >= 0 && mutationType < 0.5)
+                    {
+                        AddRandomConnection(genome);
+                        Debug.Log("AddRandomConnection");
+                        return;
+                    }
                     MutateWeights(genome);
-                }
-                else if (mutationType < 0.7)
-                {
-                    AddRandomConnection(genome);
+                    Debug.Log("MutateWeights");
                 }
                 else if (mutationType < 0.75)
                 {
                     DisableRandomConnection(genome);
+                    Debug.Log("DisableRandomConnection");
                 }
                 else if (mutationType < 0.9)
                 {
+
                     ChangeRandomNodeActivation(genome);
+                    Debug.Log("ChangeRandomNodeActivation");
                 }
                 else
                 {
                     AddRandomNode(genome);
+                    Debug.Log("AddRandomNode");
                 }
             }
         }
@@ -56,41 +66,44 @@ public class MutationManager
     //Add a new random connection
     private static void AddRandomConnection(Genome genome)
     {
-        if (genome.nodeGenes.Count < 2) return; // Ensure at least two nodes exist
+        List<NodeGene> possibleSources = new List<NodeGene>();
+        List<NodeGene> possibleTargets = new List<NodeGene>();
 
-        NodeGene node1, node2;
-        int attempts = 0, maxAttempts = 10;
+        foreach (var node in genome.nodeGenes)
+        {
+            if (node.type != NodeType.Output) possibleSources.Add(node); // Outputs cannot be sources
+            if (node.type != NodeType.Input) possibleTargets.Add(node);  // Inputs cannot be targets
+        }
+
+        if (possibleSources.Count == 0 || possibleTargets.Count == 0) return; // No valid nodes
+
+        int maxAttempts = 10, attempts = 0;
+        NodeGene randomSource, randomTarget;
 
         do
         {
-            node1 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
-            node2 = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
+            randomSource = possibleSources[UnityEngine.Random.Range(0, possibleSources.Count)];
+            randomTarget = possibleTargets[UnityEngine.Random.Range(0, possibleTargets.Count)];
             attempts++;
 
-            // Ensure valid node types and avoid loops
-        } while ((node1.id == node2.id ||
-                  (node1.type == NodeType.Output) ||
-                  (node2.type == NodeType.Input) ||
-                  genome.connectionGenes.Exists(c => c.linkid.source == node1.id && c.linkid.target == node2.id))
+            // Avoid self-connections and duplicate links
+        } while ((randomSource == randomTarget || genome.connectionGenes.Exists(c => c.linkid.source == randomSource.id && c.linkid.target == randomTarget.id))
                  && attempts < maxAttempts);
 
-        if (attempts >= maxAttempts) return; // Avoid infinite loops if no valid nodes are found
+        if (attempts >= maxAttempts) return; // No valid connection found
 
-        // Create a new connection
-        var link = new LinkID
-        {
-            id = InnovationTracker.GetInnovation(node1.id, node2.id),
-            source = node1.id,
-            target = node2.id
-        };
+        double randomWeight = UnityEngine.Random.Range(-1f, 1f);
 
-        genome.connectionGenes.Add(new ConnectionGene
-        {
-            linkid = link,
-            weight = random.NextDouble() * 2 - 1, // Random weight between -1 and 1
-            enabled = true
-        });
+        // Get unique innovation number
+        int innovationID = InnovationTracker.GetInnovation(randomSource.id, randomTarget.id);
+
+        LinkID linkid = new LinkID(innovationID, randomSource.id, randomTarget.id);
+        genome.connectionGenes.Add(new ConnectionGene(linkid, randomWeight, true));
+
+        Debug.Log($"New connection added: {randomSource.id} -> {randomTarget.id} (Weight: {randomWeight})");
     }
+
+
 
 
     // Disable random connection
@@ -121,10 +134,14 @@ public class MutationManager
             // Select a random connection to split
             var connection = genome.connectionGenes[random.Next(genome.connectionGenes.Count)];
             connection.enabled = false; // Disable the old connection
-
+            int newNodeId = 0;
+            do
+            {
+                newNodeId = InnovationTracker.GetNextNodeId();
+            } while (genome.nodeGenes.Any(n => n.id == newNodeId));
             // Create a new node
             var newNode = new NodeGene(
-                InnovationTracker.GetNextNodeId(),
+                newNodeId,
                 NodeType.Hidden,
                 0.0,
                 ActivationFunctions.Sigmoid
@@ -133,31 +150,14 @@ public class MutationManager
             genome.nodeGenes.Add(newNode);
 
             // Create two new connections
-            var link1 = new LinkID
-            {
-                id = InnovationTracker.GetInnovation(connection.linkid.source, newNode.id),
-                source = connection.linkid.source,
-                target = newNode.id
-            };
-            genome.connectionGenes.Add(new ConnectionGene
-            {
-                linkid = link1,
-                weight = 1.0, // Fixed weight for the first connection
-                enabled = true
-            });
+            int sourceId = connection.linkid.source;
+            int targetId = connection.linkid.target;
+            var link1 = new LinkID(InnovationTracker.GetInnovation(sourceId, newNode.id), sourceId, newNode.id);
 
-            var link2 = new LinkID
-            {
-                id = InnovationTracker.GetInnovation(newNode.id, connection.linkid.target),
-                source = newNode.id,
-                target = connection.linkid.target
-            };
-            genome.connectionGenes.Add(new ConnectionGene
-            {
-                linkid = link2,
-                weight = connection.weight, // Inherit weight from the old connection
-                enabled = true
-            });
+            genome.connectionGenes.Add(new ConnectionGene(link1, 1.0, true));
+
+            var link2 = new LinkID(InnovationTracker.GetInnovation(newNode.id, targetId), newNode.id, targetId);
+            genome.connectionGenes.Add(new ConnectionGene(link2, connection.weight, true));
         }
     }
 

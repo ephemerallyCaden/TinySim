@@ -1,18 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AgentStatsUI : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public Text agentIdText;
+    public Text agentAttributesText;
+    public GameObject statsPanel;
+
+    public void ShowAgentStats(Agent agent)
     {
-        
+        // Display stats in the UI
+        agentIdText.text = "ID: " + agent.id.ToString();
+        agentAttributesText.text = "Energy: " + agent.energy.ToString() + "\n" +
+                                   "Size: " + agent.size.ToString() + "\n" +
+                                   "Speed: " + agent.speed.ToString();
+
+        statsPanel.SetActive(true); // Show the stats panel
     }
 
-    // Update is called once per frame
-    void Update()
+    public void HideAgentStats()
     {
-        
+        statsPanel.SetActive(false); // Hide the stats panel
     }
 }

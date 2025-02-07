@@ -58,7 +58,7 @@ public class Agent : MonoBehaviour
     public float reproductionCooldown;      // Time required between reproductions
     public float reproductionEnergyCost;    // Energy required to reproduce
     public float maxReproductionCooldown;   // Mutates to change reproductive strategy
-    public float reproductionRange = 8.0f;  // Max distance to mate with another agent
+    public float reproductionRange;  // Max distance to mate with another agent
     private void Start()
     {
         //Variable Calculations
@@ -178,7 +178,6 @@ public class Agent : MonoBehaviour
             if (angleToTarget <= visionAngle)
             {
                 float distanceToTarget = directionToTarget.magnitude;
-                Debug.Log(angleToTarget);
                 // Detect other agents (creatures)
                 Agent currentAgent = hit.gameObject.GetComponent<Agent>();
                 if (currentAgent != null && distanceToTarget < closestAgentDistance)
@@ -186,7 +185,6 @@ public class Agent : MonoBehaviour
                     closestAgent = currentAgent;
                     closestAgentDistance = distanceToTarget;
                     closestAgentAngle = angleToTarget;
-                    Debug.Log(distanceToTarget);
                 }
 
                 // Detect food
@@ -248,7 +246,7 @@ public class Agent : MonoBehaviour
     private void ExecuteOutputs(float deltaTime)
     {
         // Move the agent
-        transform.Translate(Vector3.forward * movementSpeed * speed * deltaTime);
+        transform.Translate(transform.up * movementSpeed * speed * deltaTime);
 
         // Turn the agent
         transform.Rotate(Vector3.up, turningRate * 100 * deltaTime);
@@ -278,8 +276,8 @@ public class Agent : MonoBehaviour
         // Apply reproduction costs
         parent1.energy -= parent1.reproductionEnergyCost;
         parent2.energy -= parent2.reproductionEnergyCost;
-        parent1.reproductionCooldown = maxReproductionCooldown;
-        parent2.reproductionCooldown = maxReproductionCooldown;
+        parent1.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-5f, 5f);
+        parent2.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-5f, 5f); ;
     }
     private bool isFertile()
     {

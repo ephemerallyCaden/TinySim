@@ -93,9 +93,9 @@ MonoBehaviour:
   mutationChance: 0
   generation: 0
   age: 0
-  health: 100
-  maxEnergy: 1000
-  energy: 1000
+  health: 0
+  maxEnergy: 0
+  energy: 0
   metabolismCost: 0
   movementCost: 0
   birthTime: 0
@@ -109,8 +109,8 @@ MonoBehaviour:
     m_Bits: 256
   foodLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 135
   reproductionCooldown: 0
   reproductionEnergyCost: 0
   maxReproductionCooldown: 0
-  reproductionRange: 2
+  reproductionRange: 0

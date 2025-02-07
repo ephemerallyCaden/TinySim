@@ -14,7 +14,6 @@ public static class ReproductionManager
 
         // Mutate genome
         MutationManager.Mutate(childGenome, parent1.mutationChance, parent1.mutationMagnitude);
-
         // Mutate attributes
         AttributeCrossoverManager.MutateAttributes(
             ref size,
@@ -41,6 +40,8 @@ public static class ReproductionManager
             colour,
             visionDistance,
             visionAngle,
+            mutationChanceMod,
+            mutationMagnitudeMod,
             100f, //This is the health
             parent1.maxEnergy,  // Starts at full energy
             maxReproductionCooldown,

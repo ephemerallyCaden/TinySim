@@ -57,6 +57,8 @@ public class AgentManager : MonoBehaviour
         Vector4 colour,
         float visionDistance,
         float visionAngle,
+        float mutationChanceMod,
+        float mutationMagnitudeMod,
         float health,
         float maxEnergy,
         float maxReproductionCooldown,
@@ -74,14 +76,17 @@ public class AgentManager : MonoBehaviour
         agent.colour = colour;
         agent.visionDistance = visionDistance;
         agent.visionAngle = visionAngle;
+        agent.mutationChanceMod = mutationChanceMod;
+        agent.mutationMagnitudeMod = mutationMagnitudeMod;
         agent.health = health;
         agent.maxEnergy = maxEnergy;
-        agent.energy = maxEnergy; // Start with full energy
+        agent.energy = maxEnergy;
+
 
         //Reproductive attributes
         agent.maxReproductionCooldown = maxReproductionCooldown;
         agent.reproductionEnergyCost = reproductionEnergyCost;
-
+        agent.reproductionRange = 8.0f;
         // Assign genome and neural network
         agent.genome = genome;
         agent.network = network;
