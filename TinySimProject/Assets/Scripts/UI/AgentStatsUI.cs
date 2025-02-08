@@ -37,6 +37,11 @@ public class AgentStatsUI : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        HideAgentStats();
+    }
+
     private void Update()
     {
         if (selectedAgent != null)

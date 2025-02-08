@@ -6,7 +6,7 @@ public class WorldGeneration : MonoBehaviour
 
     [Header("Agent Initialisation")]
     public AgentInitialiser agentInitialiser;
-    public int initialAgentPopulation = 50;
+    public int initialAgentPopulation = 1;
     public AgentInitialiser.SpawnPattern spawnPattern = AgentInitialiser.SpawnPattern.Central;
 
     [Header("World Settings")]

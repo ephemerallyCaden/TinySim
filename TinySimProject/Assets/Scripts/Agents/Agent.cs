@@ -56,7 +56,7 @@ public class Agent : MonoBehaviour
     float closestFoodDistance;
     float closestFoodAngle;
     private Collider2D[] hitList = new Collider2D[20];
-
+    private CircleCollider2D col;
     //Visuals
     public int eyeNumber;
 
@@ -66,12 +66,16 @@ public class Agent : MonoBehaviour
     public float reproductionEnergyCost;    // Energy required to reproduce
     public float maxReproductionCooldown;   // Mutates to change reproductive strategy
     public float reproductionRange;  // Max distance to mate with another agent
+    public float reproductionMod = 5f;
     private void Start()
     {
         //Variable Calculations
         metabolismCost = 0.15f * speed * size;
         energy = maxEnergy;
         reproductionCooldown = maxReproductionCooldown;
+
+        col = GetComponent<CircleCollider2D>();
+        col.radius = size;
         // Global mutation parameters from the SimulationManager
         float globalMutationChance = SimulationManager.instance.globalMutationChance;
         float globalMutationMagnitude = SimulationManager.instance.globalMutationMagnitude;
@@ -255,19 +259,19 @@ public class Agent : MonoBehaviour
     {
         // Move the agent
         movementSpeed = Mathf.Clamp(movementSpeed, 0, speedMax);
-        Vector3 mov = transform.right * movementSpeed * speed * deltaTime * 0.2f;
+        float modulus = movementSpeed * speed * deltaTime * 0.5f;
 
-        transform.Translate(mov);
-        position = transform.position;
+
 
         // Turn the agent
         turningRate = Mathf.Clamp(turningRate, -turnRateMax, turnRateMax);
 
         rotation += turningRate * deltaTime * 10f;
         rotation = Mathf.Repeat(rotation, 360);
-        transform.rotation = Quaternion.Euler(0, 0, rotation);
 
-
+        Vector3 movementVector = new Vector3(modulus * Mathf.Cos(rotation * Mathf.Deg2Rad), modulus * Mathf.Sin(rotation * Mathf.Deg2Rad), 0);
+        transform.Translate(movementVector);
+        position = transform.position;
     }
 
     private void AttemptReproduction()
@@ -291,8 +295,8 @@ public class Agent : MonoBehaviour
         // Apply reproduction costs
         parent1.energy -= parent1.reproductionEnergyCost;
         parent2.energy -= parent2.reproductionEnergyCost;
-        parent1.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-5f, 5f);
-        parent2.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-5f, 5f); ;
+        parent1.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-reproductionMod, reproductionMod);
+        parent2.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-reproductionMod, reproductionMod);
     }
     private bool isFertile()
     {

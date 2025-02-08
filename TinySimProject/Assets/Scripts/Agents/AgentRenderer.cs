@@ -40,13 +40,12 @@ public class AgentRenderer2D : MonoBehaviour
 
             for (int i = 0; i < agent.eyeNumber; i++)
             {
-                float angleOffset = (i % 2 == 0) ? 30f : -30f; // Right or left eye offset
+                float angleOffset = (i % 2 == 0) ? 30f : -30f;
                 float angle = agent.rotation + angleOffset;
 
                 angle = Mathf.Repeat(angle, 360);
-                if (angle < 180 || angle > 360) continue;
+                if (angle < 180 && angle > 0) continue;
 
-                // Define distance from the center of the body for eyes
                 float distanceFromCenter = agent.size;
                 float eyeX = distanceFromCenter * Mathf.Cos(Mathf.Deg2Rad * angle);
                 float eyeY = distanceFromCenter * Mathf.Sin(Mathf.Deg2Rad * angle) / (agent.size * 2);
@@ -62,6 +61,11 @@ public class AgentRenderer2D : MonoBehaviour
 
                 renderMatrices.Add(eyeMatrix);
                 renderColours.Add(eyeColor); // Store the eye color
+
+                Debug.DrawLine(agent.position, agent.position + agent.transform.right * 2f, Color.red);
+
+
+                Debug.DrawLine(agent.position, eyePosition, Color.green);
             }
         }
         RenderInstancedMeshes(renderMatrices, renderColours); // Render bodies

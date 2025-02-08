@@ -118,7 +118,11 @@ public class AgentInitialiser : MonoBehaviour
         }
         List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
 
-        LinkID temp = new LinkID(InnovationTracker.GetInnovation(0, 14), 0, 14);
+
+        LinkID temp = new LinkID(InnovationTracker.GetInnovation(0, 13), 0, 13);
+        connectionGenes.Add(new ConnectionGene(temp, 1.0, true));
+
+        temp = new LinkID(InnovationTracker.GetInnovation(0, 14), 0, 14);
         connectionGenes.Add(new ConnectionGene(temp, 1.0, true));
 
         Genome genome = new Genome(nodeGenes, connectionGenes);
