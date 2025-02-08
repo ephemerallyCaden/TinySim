@@ -6,7 +6,7 @@ Shader "Unlit/AgentColour2D"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "Queue" = "Transparent" "RenderType" = "Opaque" }
         LOD 100
 
         Pass

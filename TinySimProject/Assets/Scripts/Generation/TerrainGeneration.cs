@@ -6,24 +6,37 @@ public class TerrainGenerator : MonoBehaviour
 {
     [Header("Tilemap Settings")]
     public Tilemap tilemap;
-    public Tile[] tiles; //deep ocean, shallow ocean, sand, plains, deep plains, hills, mountains, peaks
+    public Tile[] tiles; // deep ocean, shallow ocean, sand, plains, deep plains, hills, mountains, peaks
 
-    [Header("Perlin Noise Settings")]
-    public int width = 100;
-    public int height = 100;
-    public float scale = 20f;
-    public Vector2 offset;
 
-    public void GenerateTerrain(int width, int height, float scale, Vector2 offset)
+
+    [Header("Octave Settings")]
+    public int octaves = 4;
+    public float persistence = 0.5f;
+    public float lacunarity = 2.0f;
+
+    private void Start()
+    {
+        tilemap = FindObjectOfType<Tilemap>();
+
+        if (tilemap == null)
+        {
+            Debug.LogError("Tilemap not found");
+        }
+        else
+        {
+            Debug.Log("Tilemap found");
+        }
+    }
+
+    public void GenerateTerrain(float width, float height, float scale, Vector2 offset)
     {
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                // Calculate Perlin noise value
-                float xCoord = (float)x / width * scale + offset.x;
-                float yCoord = (float)y / height * scale + offset.y;
-                float noiseValue = Mathf.PerlinNoise(xCoord, yCoord);
+                // Calculate Perlin noise value using octaves
+                float noiseValue = GeneratePerlinNoise(x, y, width, height, scale, offset);
 
                 // Determine tile type based on noise value
                 Tile tile = GetTileFromNoise(noiseValue);
@@ -32,6 +45,28 @@ public class TerrainGenerator : MonoBehaviour
                 tilemap.SetTile(new Vector3Int(x, y, 0), tile);
             }
         }
+    }
+
+    private float GeneratePerlinNoise(int x, int y, float width, float height, float scale, Vector2 offset)
+    {
+        float total = 0f;
+        float frequency = 1f;
+        float amplitude = 1f;
+        float maxValue = 0f; // Used for normalization
+
+        for (int i = 0; i < octaves; i++)
+        {
+            float xCoord = (x / width * scale * frequency) + offset.x;
+            float yCoord = (y / height * scale * frequency) + offset.y;
+
+            total += Mathf.PerlinNoise(xCoord, yCoord) * amplitude;
+            maxValue += amplitude;
+
+            amplitude *= persistence;
+            frequency *= lacunarity;
+        }
+
+        return total / maxValue; // Normalize result to 0-1
     }
 
     private Tile GetTileFromNoise(float noiseValue)

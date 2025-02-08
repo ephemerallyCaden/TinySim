@@ -1,0 +1,109 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1713985565589818388
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3759654779003364437}
+  - component: {fileID: 4586143047120109350}
+  - component: {fileID: 6727566625820324241}
+  - component: {fileID: -7792312122229913209}
+  - component: {fileID: -1918935785774713908}
+  m_Layer: 0
+  m_Name: Generator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3759654779003364437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713985565589818388}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4586143047120109350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713985565589818388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dba61b2f3787da4da42f51ad346153a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6727566625820324241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713985565589818388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee9579470b5f222488012185f55f1e02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentInitialiser: {fileID: 4586143047120109350}
+  initialAgentPopulation: 50
+  spawnPattern: 0
+  worldSize: 0
+  worldCenter: {x: 0, y: 0, z: 0}
+  temperatureMap: {fileID: -1918935785774713908}
+  temperatureScale: 0.1
+  terrainGenerator: {fileID: -7792312122229913209}
+  terrainScale: 20
+  terrainOffset: {x: 0, y: 0}
+--- !u!114 &-7792312122229913209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713985565589818388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e4efaee10b2f2c4594f20032d0f38da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 0}
+  tiles:
+  - {fileID: 11400000, guid: 28d75a1af2e620d4aa8843c45b35f36b, type: 2}
+  - {fileID: 11400000, guid: 9f44b79753683e348921586055368edd, type: 2}
+  - {fileID: 11400000, guid: 4d0e80e70c4c7924a9ea2a29a4ba37e1, type: 2}
+  - {fileID: 11400000, guid: 27631b8bb060e534ca42dabdbd917d54, type: 2}
+  - {fileID: 11400000, guid: d13c913fe293e314a98d33ab60136aef, type: 2}
+  - {fileID: 11400000, guid: ba868f492cff8e7439dd1bbf598a9acb, type: 2}
+  - {fileID: 11400000, guid: 48027300918eb43429f52a54c68ba0a5, type: 2}
+  - {fileID: 11400000, guid: 58564e3f91a8cce429b63890cdd33826, type: 2}
+  width: 100
+  height: 100
+  scale: 20
+  offset: {x: 0, y: 0}
+--- !u!114 &-1918935785774713908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1713985565589818388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05328f04f2c600b409cd24cb04e3a6fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

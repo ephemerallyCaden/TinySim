@@ -8,7 +8,8 @@ public class SimulationManager : MonoBehaviour
     public bool isPaused = false;
     public float worldTime = 0f;
 
-    //Simulation Settings
+    [Header("Global Variables")]
+    public int worldSize = 64;
     public float globalMutationChance = 0.5f;
     public float globalMutationMagnitude = 0.5f;
     private void Awake()

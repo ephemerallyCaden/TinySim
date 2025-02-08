@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class AgentInitialiser : MonoBehaviour
 {
-    public int initialAgentCount = 50;
+    [NonSerialized] public int initialAgentCount;
 
     [Header("Base Attribute Variables")]
     [NonSerialized] public float baseSize = 1.0f;
@@ -21,16 +21,16 @@ public class AgentInitialiser : MonoBehaviour
     [NonSerialized] public float baseReproductionEnergyCost = 30f;
 
     [Header("Genome Variables")]
-    public int baseInputNum = 13;
-    public int baseOutputNum = 3;
+    [NonSerialized] public int baseInputNum = 13;
+    [NonSerialized] public int baseOutputNum = 3;
 
 
-    public float spawnRadius = 10f;
-    public Vector3 spawnCenter = Vector3.zero;
+    [NonSerialized] public float spawnRadius = 10f;
+    [NonSerialized] public Vector3 spawnCenter = Vector3.zero;
 
     public enum SpawnPattern { Central, Clusters, Random }
-    public SpawnPattern spawnPattern = SpawnPattern.Central;
-    public int numberOfClusters = 5;
+    [NonSerialized] public SpawnPattern spawnPattern = SpawnPattern.Central;
+    [NonSerialized] public int numberOfClusters = 5;
 
     public void InitialiseAgents()
     {
