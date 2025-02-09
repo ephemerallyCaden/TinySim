@@ -57,8 +57,8 @@ public static class AttributeCrossoverManager
         // Mutate speed
         if (random.NextDouble() < mutationChance)
         {
-            speed += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
-            speed = Mathf.Clamp(speed, 0.1f, 10f); // Clamp to reasonable values
+            speed += (float)(random.NextDouble() - 0.5) * mutationMagnitude * 2;
+            speed = Mathf.Clamp(speed, 0.1f, 40f); // Clamp to reasonable values
         }
 
         // Mutate colour

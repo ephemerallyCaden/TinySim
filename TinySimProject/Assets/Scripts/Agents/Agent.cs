@@ -68,6 +68,7 @@ public class Agent : MonoBehaviour
     public float reproductionRange;  // Max distance to mate with another agent
     public float reproductionMod = 5f;
     public int offspringCount = 0;
+    public float eatingRadius;
     private void Start()
     {
         //Variable Calculations
@@ -75,7 +76,8 @@ public class Agent : MonoBehaviour
         reproductionCooldown = maxReproductionCooldown;
 
         col = GetComponent<CircleCollider2D>();
-        col.radius = size;
+        col.radius = size * 1.5f;
+        eatingRadius = size + 0.2f;
         // Global mutation parameters from the SimulationManager
         float globalMutationChance = SimulationManager.instance.globalMutationChance;
         float globalMutationMagnitude = SimulationManager.instance.globalMutationMagnitude;
@@ -288,8 +290,8 @@ public class Agent : MonoBehaviour
         if (!isFertile() || !closestAgent.isFertile()) return;
 
         // Ensure the older agent is the one initiating reproduction
-        Agent parent1 = (age >= closestAgent.age ? this : closestAgent);
-        Agent parent2 = (parent1 == this ? closestAgent : this);
+        Agent parent1 = UnityEngine.Random.value > 0.5 ? this : closestAgent;
+        Agent parent2 = parent1 == this ? closestAgent : this;
 
         Vector3 offspringPosition = (parent1.position + parent2.position) / 2;
 
@@ -323,7 +325,7 @@ public class Agent : MonoBehaviour
     {
         if (closestFood != null)
         {
-            if (closestFoodDistance <= size)
+            if (closestFoodDistance <= eatingRadius)
             {
                 energy = Mathf.Min(energy + closestFood.nutritionValue, maxEnergy);
                 closestFood.gameObject.SetActive(false); // Hide the food before removal

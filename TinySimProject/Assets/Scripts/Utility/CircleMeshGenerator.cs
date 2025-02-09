@@ -8,7 +8,7 @@ public static class CircleMeshGenerator
         Vector3[] vertices = new Vector3[segments + 1];
         int[] triangles = new int[segments * 3];
 
-        // Center vertex
+        //Central vertex
         vertices[0] = Vector3.zero;
 
         // Circle vertices

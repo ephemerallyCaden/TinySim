@@ -27,18 +27,29 @@ public class AgentManager : MonoBehaviour
         if (population < maxPopulation)
         {
             // Update all agents
-            foreach (Agent agent in agents)
+
+            for (int i = agents.Count - 1; i >= 0; i--)
             {
-                agent.UpdateAgent(deltaTime);
-                agent.UpdateReproduction(deltaTime);
+                if (agents[i] == null)
+                {
+                    agents.RemoveAt(i);
+                    continue;
+                }
+                agents[i].UpdateAgent(deltaTime);
+                agents[i].UpdateReproduction(deltaTime);
             }
         }
         else
         {
             // Update all agents without updating reproduction
-            foreach (Agent agent in agents)
+            for (int i = agents.Count - 1; i >= 0; i--)
             {
-                agent.UpdateAgent(deltaTime);
+                if (agents[i] == null)
+                {
+                    agents.RemoveAt(i);
+                    continue;
+                }
+                agents[i].UpdateAgent(deltaTime);
             }
         }
 
@@ -54,15 +65,24 @@ public class AgentManager : MonoBehaviour
             foreach (Agent agent in agentsToRemove)
             {
                 agents.Remove(agent);
-                Debug.Log("Removing an Agent");
             }
             agentsToRemove.Clear();
         }
+
     }
 
     public void AgentListAdd(Agent agent)
     {
         agentsToAdd.Add(agent); // Queue for safe addition
+    }
+
+    public void AgentListRemove(Agent agent)
+    {
+        agentsToRemove.Add(agent); // Queue for safe removal
+        if (AgentStatsUI.instance.selectedAgent == agent)
+        {
+            AgentStatsUI.instance.HideAgentStats();
+        }
     }
 
     public void CreateAgent(
@@ -113,13 +133,7 @@ public class AgentManager : MonoBehaviour
         instance.AgentListAdd(agent);
 
         Debug.Log($"Agent {agent.id} Created at " + position); //Testing testing 1 2 3
+
     }
-    public void AgentListRemove(Agent agent)
-    {
-        agentsToRemove.Add(agent); // Queue for safe removal
-        if (AgentStatsUI.instance.selectedAgent == agent)
-        {
-            AgentStatsUI.instance.HideAgentStats();
-        }
-    }
+
 }

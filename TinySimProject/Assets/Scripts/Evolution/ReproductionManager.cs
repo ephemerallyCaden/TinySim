@@ -44,10 +44,10 @@ public static class ReproductionManager
             mutationChanceMod,
             mutationMagnitudeMod,
             100f, //This is the health
-            size * 100f, // Maximum energy is dependent on the size of the creature
+            parent1.reproductionEnergyCost * 2,   // Starts at energy given by parents
+            size * 200f, // Maximum energy is dependent on the size of the creature
             reproductionEnergyCost,
             maxReproductionCooldown,
-            parent1.reproductionEnergyCost * 2,   // Starts at energy given by parents
             childGenome,
             childNetwork
         );

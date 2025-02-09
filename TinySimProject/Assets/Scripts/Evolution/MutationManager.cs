@@ -130,7 +130,7 @@ public class MutationManager
         {
             // Remove the loose node and its outgoing connections
             if (genome.nodeGenes.Contains(sourceNode)) genome.nodeGenes.Remove(sourceNode);
-            foreach (ConnectionGene recursiveConnection in genome.connectionGenes.FindAll(c => c.linkid.target == sourceNode.id))
+            foreach (ConnectionGene recursiveConnection in genome.connectionGenes.FindAll(c => c.linkid.source == sourceNode.id))
             {
                 DisableConnection(genome, recursiveConnection);
             }
