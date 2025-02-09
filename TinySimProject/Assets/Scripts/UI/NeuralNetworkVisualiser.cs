@@ -12,11 +12,12 @@ public class NeuralNetworkVisualiser : MonoBehaviour
     private List<GameObject> instantiatedObjects = new List<GameObject>();
 
     [Header("Positioning Variables")]
-    private float leftAnchor = -1300;
+    private float leftAnchor = -750;
     private float inputStartingY;
     private float outputStartingY;
-    private float offsetY = 32f;
-    private float hiddenLayerSpacing = 150f; // Space between hidden layers
+    private float spacingY = 32f;
+    private float offsetY = 200f;
+    private float hiddenLayerSpacing = 75f; // Space between hidden layers
 
     public void Visualise(NeuralNetwork network)
     {
@@ -25,21 +26,21 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         Dictionary<int, GameObject> nodeObjects = new Dictionary<int, GameObject>();
 
         // Calculate Y positions
-        inputStartingY = 0.5f * network.inputNodes.Count * offsetY;
-        outputStartingY = 0.5f * network.outputNodes.Count * offsetY;
+        inputStartingY = 0.5f * network.inputNodes.Count * spacingY + offsetY;
+        outputStartingY = 0.5f * network.outputNodes.Count * spacingY + offsetY;
 
         // Create input nodes
         for (int i = 0; i < network.inputNodes.Count; i++)
         {
             Node node = network.inputNodes[i];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor, inputStartingY - (i * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor, inputStartingY - (i * spacingY)));
         }
 
         // Create output nodes
         for (int o = 0; o < network.outputNodes.Count; o++)
         {
             Node node = network.outputNodes[o];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor + 600f, outputStartingY - (o * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor + 600f, outputStartingY - (o * spacingY)));
         }
 
         // Create hidden nodes (evenly spaced)
@@ -49,7 +50,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
             if (node.type == NodeType.Hidden)
             {
                 float xPos = Random.Range(leftAnchor + 200, leftAnchor + 400); // Avoid overlap
-                float yPos = hiddenLayerIndex * hiddenLayerSpacing - 100; // Space out layers
+                float yPos = offsetY + hiddenLayerIndex * hiddenLayerSpacing; // Space out layers
                 nodeObjects[node.id] = CreateNode(node, new Vector2(xPos, yPos));
                 hiddenLayerIndex++;
             }
@@ -87,8 +88,6 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         // Convert UI positions (anchoredPosition) to world positions
         Vector3 startPos = source.GetComponent<RectTransform>().anchoredPosition;
         Vector3 endPos = target.GetComponent<RectTransform>().anchoredPosition;
-
-        rectTransform.anchoredPosition = new Vector2(515, 186);
 
         line.points = new Vector2[] { startPos, endPos };
         Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");

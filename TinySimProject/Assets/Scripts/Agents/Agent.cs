@@ -67,6 +67,7 @@ public class Agent : MonoBehaviour
     public float maxReproductionCooldown;   // Mutates to change reproductive strategy
     public float reproductionRange;  // Max distance to mate with another agent
     public float reproductionMod = 5f;
+    public int offspringCount = 0;
     private void Start()
     {
         //Variable Calculations
@@ -300,8 +301,10 @@ public class Agent : MonoBehaviour
         parent2.energy -= parent2.reproductionEnergyCost;
         parent1.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-reproductionMod, reproductionMod);
         parent2.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-reproductionMod, reproductionMod);
+        parent1.offspringCount++;
+        parent2.offspringCount++;
     }
-    private bool isFertile()
+    public bool isFertile()
     {
         return reproductionCooldown <= 0 && energy > reproductionEnergyCost;
     }
