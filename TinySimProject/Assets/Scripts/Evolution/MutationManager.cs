@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 public class MutationManager
 {
@@ -9,7 +10,7 @@ public class MutationManager
 
     public static void Mutate(Genome genome, float mutationChance, float mutationMagnitude)
     {
-        int mutationCount = (int)Math.Ceiling(12 * mutationMagnitude);
+        int mutationCount = (int)Math.Ceiling(4 * mutationMagnitude);
         for (int i = 0; i < mutationCount; i++)
         {
             double mutationValue = random.NextDouble();
@@ -21,30 +22,30 @@ public class MutationManager
                     if (genome.connectionGenes.Count >= 1 && mutationType < 0.4)
                     {
                         MutateWeights(genome);
-                        Debug.Log("MutateWeights");
+                        //Debug.Log("MutateWeights");
                         return;
                     }
 
                     AddRandomConnection(genome);
-                    Debug.Log("AddRandomConnection");
+                    //Debug.Log("AddRandomConnection");
 
 
                 }
                 else if (mutationType < 0.72)
                 {
                     DisableRandomConnection(genome);
-                    Debug.Log("DisableRandomConnection");
+                    //Debug.Log("DisableRandomConnection");
                 }
                 else if (mutationType < 0.9)
                 {
 
-                    ChangeRandomNodeActivation(genome);
-                    Debug.Log("ChangeRandomNodeActivation");
+                    ChangeRandomNodeActivationFunction(genome);
+                    //Debug.Log("ChangeRandomNodeActivation");
                 }
                 else
                 {
                     AddRandomNode(genome);
-                    Debug.Log("AddRandomNode");
+                    //Debug.Log("AddRandomNode");
                 }
             }
         }
@@ -115,15 +116,34 @@ public class MutationManager
         {
             // Select random connection to disable
             var connection = genome.connectionGenes[random.Next(genome.connectionGenes.Count)];
-            connection.enabled = false;
+            DisableConnection(genome, connection);
+        }
+    }
 
-            // Check if the target node has no incoming connections
-            var targetNode = genome.nodeGenes.FirstOrDefault(n => n.id == connection.linkid.target);
-            if (targetNode != null && targetNode.type == NodeType.Hidden && !genome.connectionGenes.Any(c => c.linkid.target == targetNode.id && c.enabled))
+    private static void DisableConnection(Genome genome, ConnectionGene connection)
+    {
+        connection.enabled = false;
+
+        // Check if the source node has no incoming connections
+        var sourceNode = genome.nodeGenes.FirstOrDefault(n => n.id == connection.linkid.source);
+        if (sourceNode != null && sourceNode.type == NodeType.Hidden && !genome.connectionGenes.Any(c => c.linkid.source == sourceNode.id && c.enabled))
+        {
+            // Remove the loose node and its outgoing connections
+            if (genome.nodeGenes.Contains(sourceNode)) genome.nodeGenes.Remove(sourceNode);
+            foreach (ConnectionGene recursiveConnection in genome.connectionGenes.FindAll(c => c.linkid.target == sourceNode.id))
             {
-                // Remove the loose node and its outgoing connections
-                genome.nodeGenes.Remove(targetNode);
-                genome.connectionGenes.RemoveAll(c => c.linkid.source == targetNode.id || c.linkid.target == targetNode.id);
+                DisableConnection(genome, recursiveConnection);
+            }
+        }
+        // Check if the target node has no incoming connections
+        var targetNode = genome.nodeGenes.FirstOrDefault(n => n.id == connection.linkid.target);
+        if (targetNode != null && targetNode.type == NodeType.Hidden && !genome.connectionGenes.Any(c => c.linkid.target == targetNode.id && c.enabled))
+        {
+            // Remove the loose node and its outgoing connections
+            if (genome.nodeGenes.Contains(targetNode)) genome.nodeGenes.Remove(targetNode);
+            foreach (ConnectionGene recursiveConnection in genome.connectionGenes.FindAll(c => c.linkid.source == targetNode.id))
+            {
+                DisableConnection(genome, recursiveConnection);
             }
         }
     }
@@ -141,6 +161,7 @@ public class MutationManager
             {
                 newNodeId = InnovationTracker.GetNextNodeId();
             } while (genome.nodeGenes.Any(n => n.id == newNodeId));
+
             // Create a new node
             var newNode = new NodeGene(
                 newNodeId,
@@ -164,12 +185,19 @@ public class MutationManager
     }
 
     //Change a random node's activation function
-    private static void ChangeRandomNodeActivation(Genome genome)
+    private static void ChangeRandomNodeActivationFunction(Genome genome)
     {
         if (genome.nodeGenes.Count > 0)
         {
             var node = genome.nodeGenes[random.Next(genome.nodeGenes.Count)];
-            node.activationFunction = ActivationFunctions.Sigmoid;
+            node.activationFunction = GetRandomActivationFunction();
         }
+    }
+
+    private static Func<double, double> GetRandomActivationFunction()
+    {
+        int functionIndex = UnityEngine.Random.Range(0, 4);
+        return ActivationFunctions.functionList[functionIndex];
+
     }
 }

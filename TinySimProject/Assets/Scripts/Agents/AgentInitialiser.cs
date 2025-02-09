@@ -15,7 +15,7 @@ public class AgentInitialiser : MonoBehaviour
     [NonSerialized] public float baseVisionAngle = 90f;
     [NonSerialized] public float baseMutationChanceMod = 1f;
     [NonSerialized] public float baseMutationMagnitudeMod = 1f;
-    [NonSerialized] public float baseMaxEnergy = 100f;
+    [NonSerialized] public float baseMaxEnergy = 200f;
     [NonSerialized] public float baseHealth = 100f;
     [NonSerialized] public float baseMaxReproductionCooldown = 20f;
     [NonSerialized] public float baseReproductionEnergyCost = 30f;
@@ -85,6 +85,7 @@ public class AgentInitialiser : MonoBehaviour
 
         // Call CreateAgent with base parameters
         AgentManager.instance.CreateAgent(
+            0, //GENERATION NUMBER
             position,
             baseSize + UnityEngine.Random.Range(-0.5f, 0.5f),
             baseSpeed + UnityEngine.Random.Range(-0.5f, 0.5f),

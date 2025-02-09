@@ -6,7 +6,7 @@ public class Food : MonoBehaviour
     public Vector3 position;
     public float size;
     public Color colour = new Color(0.2f, 0.5f, 0.05f, 1);
-    public float despawnTime = 100f;
+    public float despawnTime;
     public float nutritionValue;
 
     public CircleCollider2D col;
@@ -15,6 +15,7 @@ public class Food : MonoBehaviour
 
     private void Start()
     {
+        despawnTime = Random.Range(800f, 1200f);
         position = transform.position;
         timer = despawnTime;
         nutritionValue = Random.Range(10f, 40f);
@@ -23,14 +24,14 @@ public class Food : MonoBehaviour
         col.radius = size;
     }
 
-    private void FixedUpdate()
+    public void UpdateFood(float deltaTime)
     {
-        timer -= Time.deltaTime;
+        timer -= deltaTime;
 
-        //if (timer <= 0f)
-        //{
-        //    DespawnFood();
-        //}
+        if (timer <= 0f)
+        {
+            DespawnFood();
+        }
     }
 
     private void DespawnFood()

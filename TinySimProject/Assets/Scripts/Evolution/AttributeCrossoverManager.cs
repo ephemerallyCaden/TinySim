@@ -51,7 +51,7 @@ public static class AttributeCrossoverManager
         if (random.NextDouble() < mutationChance)
         {
             size += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
-            size = Mathf.Clamp(size, 0.1f, 10f); // Clamp to reasonable values
+            size = Mathf.Clamp(size, 0.5f, 10f); // Clamp to reasonable values
         }
 
         // Mutate speed

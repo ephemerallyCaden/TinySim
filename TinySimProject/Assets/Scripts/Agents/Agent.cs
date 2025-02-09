@@ -20,7 +20,7 @@ public class Agent : MonoBehaviour
     public float mutationChance;
 
     // Agent State
-    public float generation;
+    public int generation;
     public float age;                 // Current age (world time - birth time)
     public float health;              // Current health
     public float maxEnergy;           // Maximum energy capacity
@@ -70,7 +70,8 @@ public class Agent : MonoBehaviour
     private void Start()
     {
         //Variable Calculations
-        metabolismCost = 0.5f * speed * size;
+        maxEnergy = size * 100;
+        metabolismCost = (0.3f * speed) + (0.2f * size);
         energy = maxEnergy;
         reproductionCooldown = maxReproductionCooldown;
 
@@ -286,8 +287,8 @@ public class Agent : MonoBehaviour
         if (!isFertile() || !closestAgent.isFertile()) return;
 
         // Ensure the older agent is the one initiating reproduction
-        Agent parent1 = age >= closestAgent.age ? this : closestAgent;
-        Agent parent2 = parent1 == this ? closestAgent : this;
+        Agent parent1 = (age >= closestAgent.age ? this : closestAgent);
+        Agent parent2 = (parent1 == this ? closestAgent : this);
 
         Vector3 offspringPosition = (parent1.position + parent2.position) / 2;
 

@@ -8,6 +8,8 @@ public class AgentManager : MonoBehaviour
     public GameObject agentPrefab;
     public List<Agent> agents = new List<Agent>();
     public int currentAgentID = 0;
+    public int maxPopulation;
+    public int population;
 
     // Queues for deferred modifications
     private readonly List<Agent> agentsToAdd = new List<Agent>();
@@ -21,6 +23,7 @@ public class AgentManager : MonoBehaviour
 
     public void UpdateAgents(float deltaTime)
     {
+        population = agents.Count;
         // Update all agents
         foreach (Agent agent in agents)
         {
@@ -51,6 +54,7 @@ public class AgentManager : MonoBehaviour
     }
 
     public void CreateAgent(
+        int generation,
         Vector3 position,
         float size,
         float speed,
@@ -70,6 +74,7 @@ public class AgentManager : MonoBehaviour
         Agent agent = agentObject.GetComponent<Agent>();
 
         // Assign attributes
+        agent.generation = generation;
         agent.id = currentAgentID++;
         agent.size = size;
         agent.speed = speed;

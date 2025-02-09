@@ -34,6 +34,7 @@ public static class ReproductionManager
 
         // Create offspring agent
         AgentManager.instance.CreateAgent(
+            parent1.generation++,
             position,
             size,
             speed,

@@ -14,7 +14,6 @@ public class NeuralNetworkVisualiser : MonoBehaviour
     [Header("Positioning Variables")]
     private float inputStartingY;
     private float outputStartingY;
-    private float hiddenStartingY;
     private float offsetY = 32f;
     private float hiddenLayerSpacing = 150f; // Space between hidden layers
 
@@ -32,14 +31,14 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         for (int i = 0; i < network.inputNodes.Count; i++)
         {
             Node node = network.inputNodes[i];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(-300, inputStartingY - (i * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(-800, inputStartingY - (i * offsetY)));
         }
 
         // Create output nodes
         for (int o = 0; o < network.outputNodes.Count; o++)
         {
             Node node = network.outputNodes[o];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(300, outputStartingY - (o * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(-200, outputStartingY - (o * offsetY)));
         }
 
         // Create hidden nodes (evenly spaced)
@@ -48,7 +47,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         {
             if (node.type == NodeType.Hidden)
             {
-                float xPos = Random.Range(-100, 100); // Avoid overlap
+                float xPos = Random.Range(-600, -400); // Avoid overlap
                 float yPos = hiddenLayerIndex * hiddenLayerSpacing - 100; // Space out layers
                 nodeObjects[node.id] = CreateNode(node, new Vector2(xPos, yPos));
                 hiddenLayerIndex++;
@@ -80,32 +79,21 @@ public class NeuralNetworkVisualiser : MonoBehaviour
     private void CreateConnection(GameObject source, GameObject target, double weight)
     {
         GameObject lineObj = Instantiate(connectionPrefab, canvasParent);
-        LineRenderer line = lineObj.GetComponent<LineRenderer>();
+        UILineRenderer line = lineObj.GetComponent<UILineRenderer>();
+        RectTransform rectTransform = lineObj.GetComponent<RectTransform>();
 
-        // Ensure the LineRenderer has a material
-        if (line.material == null)
-        {
-            line.material = new Material(Shader.Find("Sprites/Default"));
-        }
-
-        // Set line width for visibility
-        line.startWidth = 5f;
-        line.endWidth = 5f;
 
         // Convert UI positions (anchoredPosition) to world positions
-        Vector3 startPos = source.GetComponent<RectTransform>().position;
-        Vector3 endPos = target.GetComponent<RectTransform>().position;
+        Vector3 startPos = source.GetComponent<RectTransform>().anchoredPosition;
+        Vector3 endPos = target.GetComponent<RectTransform>().anchoredPosition;
 
-        line.positionCount = 2;
-        line.SetPosition(0, startPos);
-        line.SetPosition(1, endPos);
+        rectTransform.anchoredPosition = new Vector2(515, 186);
 
-        // Set line color based on weight
-        line.startColor = line.endColor = WeightToColor(weight);
+        line.points = new Vector2[] { startPos, endPos };
+        Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");
+        line.color = WeightToColor(weight);
 
-        // Sorting order to ensure visibility
-        line.sortingOrder = 100;
-
+        // Ensure the LineRenderer is visible
         instantiatedObjects.Add(lineObj);
     }
 

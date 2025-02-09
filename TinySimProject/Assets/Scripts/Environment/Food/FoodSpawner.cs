@@ -33,14 +33,18 @@ public class FoodSpawner : MonoBehaviour
         foodSpawnTime = maxSpawnTime;
     }
 
-    private void FixedUpdate()
+    public void UpdateFoodSpawner(float deltaTime)
     {
-        foodSpawnTime -= Time.deltaTime;
+        foodSpawnTime -= deltaTime;
 
         if (foodSpawnTime <= 0)
         {
             foodSpawnTime = maxSpawnTime;
             SpawnFood();
+        }
+        foreach (Food food in foodList)
+        {
+            food.UpdateFood(deltaTime);
         }
     }
 
@@ -63,7 +67,7 @@ public class FoodSpawner : MonoBehaviour
             food.position = randomPosition;
 
             FoodListAdd(food);
-            Debug.Log($"Spawned food at: {randomPosition}");
+            //Debug.Log($"Spawned food at: {randomPosition}");
         }
     }
 
