@@ -8,10 +8,10 @@ public class AgentManager : MonoBehaviour
     public GameObject agentPrefab;
     public List<Agent> agents = new List<Agent>();
     public int currentAgentID = 0;
-    public int maxPopulation;
+    public int maxPopulation = 200;
     public int population;
 
-    // Queues for deferred modifications
+    // Queues for deferred list changes
     private readonly List<Agent> agentsToAdd = new List<Agent>();
     private readonly List<Agent> agentsToRemove = new List<Agent>();
 
@@ -24,13 +24,25 @@ public class AgentManager : MonoBehaviour
     public void UpdateAgents(float deltaTime)
     {
         population = agents.Count;
-        // Update all agents
-        foreach (Agent agent in agents)
+        if (population < maxPopulation)
         {
-            agent.UpdateAgent(deltaTime);
+            // Update all agents
+            foreach (Agent agent in agents)
+            {
+                agent.UpdateAgent(deltaTime);
+                agent.UpdateReproduction(deltaTime);
+            }
+        }
+        else
+        {
+            // Update all agents without updating reproduction
+            foreach (Agent agent in agents)
+            {
+                agent.UpdateAgent(deltaTime);
+            }
         }
 
-        // Apply additions and removals AFTER iteration
+        // Apply additions and removals afrer iteration to prevent changing the iterator
         if (agentsToAdd.Count > 0)
         {
             agents.AddRange(agentsToAdd);
@@ -64,6 +76,7 @@ public class AgentManager : MonoBehaviour
         float mutationChanceMod,
         float mutationMagnitudeMod,
         float health,
+        float energy,
         float maxEnergy,
         float maxReproductionCooldown,
         float reproductionEnergyCost,
@@ -85,7 +98,7 @@ public class AgentManager : MonoBehaviour
         agent.mutationMagnitudeMod = mutationMagnitudeMod;
         agent.health = health;
         agent.maxEnergy = maxEnergy;
-        agent.energy = maxEnergy;
+        agent.energy = energy;
 
 
         //Reproductive attributes

@@ -68,7 +68,7 @@ public class AgentInitialiser : MonoBehaviour
         });
     }
 
-    private void SpawnAgents(System.Func<Vector3> getPosition)
+    private void SpawnAgents(Func<Vector3> getPosition)
     {
         for (int i = 0; i < initialAgentCount; i++)
             CreateBaseAgent(getPosition());
@@ -96,6 +96,7 @@ public class AgentInitialiser : MonoBehaviour
             baseMutationMagnitudeMod,
             baseHealth,
             baseMaxEnergy,
+            baseMaxEnergy, //Starts at full energy initially to boost survival chance
             baseMaxReproductionCooldown,
             baseReproductionEnergyCost,
             baseGenome,

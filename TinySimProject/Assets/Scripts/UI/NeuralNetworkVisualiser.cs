@@ -12,6 +12,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
     private List<GameObject> instantiatedObjects = new List<GameObject>();
 
     [Header("Positioning Variables")]
+    private float leftAnchor = -1300;
     private float inputStartingY;
     private float outputStartingY;
     private float offsetY = 32f;
@@ -31,14 +32,14 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         for (int i = 0; i < network.inputNodes.Count; i++)
         {
             Node node = network.inputNodes[i];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(-800, inputStartingY - (i * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor, inputStartingY - (i * offsetY)));
         }
 
         // Create output nodes
         for (int o = 0; o < network.outputNodes.Count; o++)
         {
             Node node = network.outputNodes[o];
-            nodeObjects[node.id] = CreateNode(node, new Vector2(-200, outputStartingY - (o * offsetY)));
+            nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor + 600f, outputStartingY - (o * offsetY)));
         }
 
         // Create hidden nodes (evenly spaced)
@@ -47,7 +48,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         {
             if (node.type == NodeType.Hidden)
             {
-                float xPos = Random.Range(-600, -400); // Avoid overlap
+                float xPos = Random.Range(leftAnchor + 200, leftAnchor + 400); // Avoid overlap
                 float yPos = hiddenLayerIndex * hiddenLayerSpacing - 100; // Space out layers
                 nodeObjects[node.id] = CreateNode(node, new Vector2(xPos, yPos));
                 hiddenLayerIndex++;

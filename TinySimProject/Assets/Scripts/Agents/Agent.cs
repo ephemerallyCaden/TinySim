@@ -70,9 +70,7 @@ public class Agent : MonoBehaviour
     private void Start()
     {
         //Variable Calculations
-        maxEnergy = size * 100;
         metabolismCost = (0.3f * speed) + (0.2f * size);
-        energy = maxEnergy;
         reproductionCooldown = maxReproductionCooldown;
 
         col = GetComponent<CircleCollider2D>();
@@ -134,14 +132,16 @@ public class Agent : MonoBehaviour
         ExecuteOutputs(deltaTime);
 
         Eat();
+    }
 
+    public void UpdateReproduction(float deltaTime)
+    {
         //Reproduction
         reproductionCooldown -= deltaTime;
         if (reproductionCooldown <= 0)
         {
             AttemptReproduction();
         }
-
     }
 
     // Update energy and health

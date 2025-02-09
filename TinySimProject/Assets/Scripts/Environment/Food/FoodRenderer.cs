@@ -14,22 +14,19 @@ public class FoodRenderer : MonoBehaviour
     private void Start()
     {
         // Generate the 2D circle mesh for food rendering
-        circleMesh = CircleMeshGenerator.GenerateCircleMesh(); // 16 segments for the circle
+        circleMesh = CircleMeshGenerator.GenerateCircleMesh(6); // 6 segments for the circle as they are small so can afford to be lower quality
     }
 
     private void Update()
     {
-        // Get the list of food objects from the FoodManager (or wherever it's stored)
         foodList = FoodSpawner.instance.foodList;
 
         // Clear the lists for this frame
         matrices.Clear();
         colours.Clear();
 
-        // Loop through all food objects and create transformation matrices and colors
         foreach (Food food in foodList)
         {
-            // Create transformation matrix (position and size for the food)
             Matrix4x4 matrix = Matrix4x4.TRS(
                 food.position, // Food position
                 Quaternion.identity, // No rotation
@@ -46,13 +43,10 @@ public class FoodRenderer : MonoBehaviour
             return;
         }
 
-        // Set up the material property block to pass per-instance properties
         MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
 
-        // Set the colors for each instance (food)
         propertyBlock.SetVectorArray("_Color", colours);
 
-        // Render the food in batches of 1023 instances to avoid GPU limits
         for (int i = 0; i < matrices.Count; i += 1023)
         {
             int count = Mathf.Min(1023, matrices.Count - i);

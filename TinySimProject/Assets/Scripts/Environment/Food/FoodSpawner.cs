@@ -13,6 +13,10 @@ public class FoodSpawner : MonoBehaviour
     public float maxSpawnTime = 2f;
     public List<Food> foodList;
 
+    // Queues for deferred modifications
+    private readonly List<Food> foodToAdd = new List<Food>();
+    private readonly List<Food> foodToRemove = new List<Food>();
+
     [Header("World Settings")]
     public TemperatureMap temperatureMap;
     public int worldSize;
@@ -42,9 +46,25 @@ public class FoodSpawner : MonoBehaviour
             foodSpawnTime = maxSpawnTime;
             SpawnFood();
         }
+
         foreach (Food food in foodList)
         {
-            food.UpdateFood(deltaTime);
+            if (food != null) food.UpdateFood(deltaTime);
+        }
+
+        if (foodToAdd.Count > 0)
+        {
+            foodList.AddRange(foodToAdd);
+            foodToAdd.Clear();
+        }
+
+        if (foodToRemove.Count > 0)
+        {
+            foreach (Food food in foodToRemove)
+            {
+                foodList.Remove(food);
+            }
+            foodToRemove.Clear();
         }
     }
 
@@ -73,11 +93,11 @@ public class FoodSpawner : MonoBehaviour
 
     public void FoodListAdd(Food food)
     {
-        foodList.Add(food);
+        foodToAdd.Add(food);
     }
     public void FoodListRemove(Food food)
     {
-        foodList.Remove(food);
+        foodToRemove.Add(food);
     }
     private Vector2 GetRandomPositionInWorld()
     {
