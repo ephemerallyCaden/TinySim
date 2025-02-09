@@ -70,7 +70,7 @@ public class Agent : MonoBehaviour
     private void Start()
     {
         //Variable Calculations
-        metabolismCost = 0.15f * speed * size;
+        metabolismCost = 0.5f * speed * size;
         energy = maxEnergy;
         reproductionCooldown = maxReproductionCooldown;
 
@@ -131,6 +131,8 @@ public class Agent : MonoBehaviour
 
         // Execute outputs
         ExecuteOutputs(deltaTime);
+
+        Eat();
 
         //Reproduction
         reproductionCooldown -= deltaTime;
@@ -313,6 +315,19 @@ public class Agent : MonoBehaviour
         Destroy(gameObject);
     }
 
+    private void Eat()
+    {
+        if (closestFood != null)
+        {
+            if (closestFoodDistance <= size)
+            {
+                energy = Mathf.Min(energy + closestFood.nutritionValue, maxEnergy);
+                closestFood.gameObject.SetActive(false); // Hide the food before removal
+                FoodSpawner.instance.FoodListRemove(closestFood);
+                Destroy(closestFood.gameObject);
+            }
+        }
+    }
     // Debugging: Draw vision cone in the editor
     void OnDrawGizmos()
     {

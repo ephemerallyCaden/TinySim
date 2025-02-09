@@ -9,7 +9,7 @@ public class MutationManager
 
     public static void Mutate(Genome genome, float mutationChance, float mutationMagnitude)
     {
-        int mutationCount = (int)Math.Ceiling(4 * mutationMagnitude);
+        int mutationCount = (int)Math.Ceiling(12 * mutationMagnitude);
         for (int i = 0; i < mutationCount; i++)
         {
             double mutationValue = random.NextDouble();
@@ -18,7 +18,7 @@ public class MutationManager
                 double mutationType = random.NextDouble();
                 if (mutationType < 0.7)
                 {
-                    if (genome.connectionGenes.Count >= 0 && mutationType < 0.5)
+                    if (genome.connectionGenes.Count >= 1 && mutationType < 0.4)
                     {
                         MutateWeights(genome);
                         Debug.Log("MutateWeights");
@@ -30,7 +30,7 @@ public class MutationManager
 
 
                 }
-                else if (mutationType < 0.75)
+                else if (mutationType < 0.72)
                 {
                     DisableRandomConnection(genome);
                     Debug.Log("DisableRandomConnection");

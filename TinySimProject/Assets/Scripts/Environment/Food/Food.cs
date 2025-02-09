@@ -9,7 +9,7 @@ public class Food : MonoBehaviour
     public float despawnTime = 100f;
     public float nutritionValue;
 
-    CircleCollider2D col;
+    public CircleCollider2D col;
 
     private float timer;
 
@@ -17,8 +17,8 @@ public class Food : MonoBehaviour
     {
         position = transform.position;
         timer = despawnTime;
-        nutritionValue = Random.Range(5f, 20f);
-        size = nutritionValue * 0.02f;
+        nutritionValue = Random.Range(10f, 40f);
+        size = nutritionValue * 0.01f;
 
         col.radius = size;
     }
@@ -27,10 +27,10 @@ public class Food : MonoBehaviour
     {
         timer -= Time.deltaTime;
 
-        if (timer <= 0f)
-        {
-            DespawnFood();
-        }
+        //if (timer <= 0f)
+        //{
+        //    DespawnFood();
+        //}
     }
 
     private void DespawnFood()

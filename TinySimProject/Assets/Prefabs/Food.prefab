@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4063127358105547701}
   - component: {fileID: 3477116421669406420}
   - component: {fileID: 2722153801566295309}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Food
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -50,6 +50,7 @@ MonoBehaviour:
   colour: {r: 0.7476058, g: 1, b: 0.53396225, a: 1}
   despawnTime: 100
   nutritionValue: 10
+  col: {fileID: 2722153801566295309}
 --- !u!58 &2722153801566295309
 CircleCollider2D:
   m_ObjectHideFlags: 0

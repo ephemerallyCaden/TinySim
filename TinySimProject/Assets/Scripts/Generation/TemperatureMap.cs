@@ -14,7 +14,7 @@ public class TemperatureMap : MonoBehaviour
             {
                 // Use Perlin noise to generate temperature variation
                 float temperature = Mathf.PerlinNoise(x * scale + offsetX, y * scale + offsetY); // Adjust the scale as needed
-                temperatureMap[x, y] = temperature;
+                temperatureMap[x, y] = temperature + 0.5f;
             }
         }
     }

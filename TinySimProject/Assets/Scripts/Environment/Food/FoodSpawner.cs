@@ -10,7 +10,7 @@ public class FoodSpawner : MonoBehaviour
     public GameObject foodPrefab;
     public int initialFoodCount = 100;
     public float foodSpawnTime;
-    public float maxSpawnTime = 5f;
+    public float maxSpawnTime = 2f;
     public List<Food> foodList;
 
     [Header("World Settings")]
