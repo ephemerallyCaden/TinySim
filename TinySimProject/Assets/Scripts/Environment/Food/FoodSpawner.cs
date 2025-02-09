@@ -77,8 +77,8 @@ public class FoodSpawner : MonoBehaviour
     }
     private Vector2 GetRandomPositionInWorld()
     {
-        float randomX = Random.Range(0, worldSize);
-        float randomY = Random.Range(0, worldSize);
+        float randomX = Random.Range(0, SimulationManager.instance.worldSize);
+        float randomY = Random.Range(0, SimulationManager.instance.worldSize);
         return new Vector2(randomX, randomY);
     }
 

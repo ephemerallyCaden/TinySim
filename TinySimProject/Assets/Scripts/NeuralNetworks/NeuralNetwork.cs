@@ -39,8 +39,8 @@ public class Connection
 
 public class NeuralNetwork
 {
-    private List<Node> nodes;
-    private List<Connection> connections;
+    public List<Node> nodes;
+    public List<Connection> connections;
     private List<Node> evaluationOrder;
     public List<Node> inputNodes;
     public List<Node> outputNodes;

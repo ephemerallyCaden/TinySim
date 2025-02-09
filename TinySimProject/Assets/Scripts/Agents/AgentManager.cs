@@ -99,5 +99,9 @@ public class AgentManager : MonoBehaviour
     public void AgentListRemove(Agent agent)
     {
         agentsToRemove.Add(agent); // Queue for safe removal
+        if (AgentStatsUI.instance.selectedAgent == agent)
+        {
+            AgentStatsUI.instance.HideAgentStats();
+        }
     }
 }

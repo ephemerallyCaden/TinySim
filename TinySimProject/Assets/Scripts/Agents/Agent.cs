@@ -272,8 +272,12 @@ public class Agent : MonoBehaviour
         rotation = Mathf.Repeat(rotation, 360);
 
         Vector3 movementVector = new Vector3(modulus * Mathf.Cos(rotation * Mathf.Deg2Rad), modulus * Mathf.Sin(rotation * Mathf.Deg2Rad), 0);
-        transform.Translate(movementVector);
-        position = transform.position;
+        //Wrapping Behaviour
+        position.x = Mathf.Repeat(movementVector.x + transform.position.x, SimulationManager.instance.worldSize);
+        position.y = Mathf.Repeat(movementVector.y + transform.position.y, SimulationManager.instance.worldSize);
+
+        transform.position = position;
+
     }
 
     private void AttemptReproduction()
@@ -286,10 +290,6 @@ public class Agent : MonoBehaviour
         Agent parent2 = parent1 == this ? closestAgent : this;
 
         Vector3 offspringPosition = (parent1.position + parent2.position) / 2;
-
-        // // Modify offspring size & energy based on reproductive strategy
-        // float offspringSize = Mathf.Clamp((parent1.size + parent2.size) / 2 * (reproductionEnergyCost / 30f), 0.5f, 3f);
-        // float offspringEnergy = Mathf.Clamp((parent1.maxEnergy + parent2.maxEnergy) / 2 * (reproductionEnergyCost / 30f), 10f, 100f);
 
         // Create offspring
         ReproductionManager.Reproduce(parent1, parent2, offspringPosition);

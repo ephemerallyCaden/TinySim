@@ -81,12 +81,14 @@ public class AgentInitialiser : MonoBehaviour
         Genome baseGenome = GenerateBaseGenome();
         NeuralNetwork baseNetwork = new NeuralNetwork(baseGenome);
 
+        Color randomColour = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value, 1f);
+
         // Call CreateAgent with base parameters
         AgentManager.instance.CreateAgent(
             position,
             baseSize + UnityEngine.Random.Range(-0.5f, 0.5f),
             baseSpeed + UnityEngine.Random.Range(-0.5f, 0.5f),
-            baseColour,
+            randomColour,
             baseVisionDistance,
             baseVisionAngle,
             baseMutationChanceMod,

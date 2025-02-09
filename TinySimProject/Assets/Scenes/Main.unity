@@ -764,7 +764,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6727566625820324241, guid: b6a38528ff70b814fbebbf3f93032703, type: 3}
       propertyPath: worldSize
-      value: 64
+      value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 6727566625820324241, guid: b6a38528ff70b814fbebbf3f93032703, type: 3}
       propertyPath: terrainScale
@@ -823,8 +823,8 @@ MonoBehaviour:
   isPaused: 0
   worldTime: 0
   worldSize: 64
-  globalMutationChance: 0.05
-  globalMutationMagnitude: 0.1
+  globalMutationChance: 0.41
+  globalMutationMagnitude: 0.55
 --- !u!4 &1077656028
 Transform:
   m_ObjectHideFlags: 0

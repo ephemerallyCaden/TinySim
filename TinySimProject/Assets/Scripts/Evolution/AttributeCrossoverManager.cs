@@ -64,9 +64,9 @@ public static class AttributeCrossoverManager
         // Mutate colour
         if (random.NextDouble() < mutationChance)
         {
-            colour.r += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
-            colour.g += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
-            colour.b += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
+            colour.r += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
+            colour.g += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
+            colour.b += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
 
             colour.r = Mathf.Clamp01(colour.r);
             colour.g = Mathf.Clamp01(colour.g);
