@@ -11,6 +11,9 @@ public class AgentManager : MonoBehaviour
     public int maxPopulation = 200;
     public int population;
 
+    private int generationSum;
+    public int avgGeneration;
+
     // Queues for deferred list changes
     private readonly List<Agent> agentsToAdd = new List<Agent>();
     private readonly List<Agent> agentsToRemove = new List<Agent>();
@@ -24,6 +27,7 @@ public class AgentManager : MonoBehaviour
     public void UpdateAgents(float deltaTime)
     {
         population = agents.Count;
+        generationSum = 0;
         if (population < maxPopulation)
         {
             // Update all agents
@@ -36,7 +40,9 @@ public class AgentManager : MonoBehaviour
                     continue;
                 }
                 agents[i].UpdateAgent(deltaTime);
+                generationSum += agents[i].generation;
                 agents[i].UpdateReproduction(deltaTime);
+
             }
         }
         else
@@ -50,8 +56,12 @@ public class AgentManager : MonoBehaviour
                     continue;
                 }
                 agents[i].UpdateAgent(deltaTime);
+                generationSum += agents[i].generation;
             }
         }
+
+        if (population > 0) avgGeneration = generationSum / population;
+        else avgGeneration = -1;
 
         // Apply additions and removals afrer iteration to prevent changing the iterator
         if (agentsToAdd.Count > 0)

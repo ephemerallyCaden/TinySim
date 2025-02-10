@@ -72,7 +72,7 @@ public class Agent : MonoBehaviour
     private void Start()
     {
         //Variable Calculations
-        metabolismCost = (0.3f * speed) + (0.2f * size);
+        metabolismCost = (0.3f * speed) + (0.3f * size);
         reproductionCooldown = maxReproductionCooldown;
 
         col = GetComponent<CircleCollider2D>();

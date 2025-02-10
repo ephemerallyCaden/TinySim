@@ -46,7 +46,7 @@ public class AgentStatsUI : MonoBehaviour
         {
             nameText.text = $"ID: {selectedAgent.id}                Generation: {selectedAgent.generation}";
             energyText.text = $"Age: {selectedAgent.age} \nEnergy: {selectedAgent.energy} \nMax Energy: {selectedAgent.maxEnergy} \nHealth: {selectedAgent.health} \nMetabolism Cost: {selectedAgent.metabolismCost} \n";
-            attributesText.text = $"Size: {selectedAgent.size} \nSpeed: {selectedAgent.speed} \nVision Distance: {selectedAgent.visionDistance} \nVision Angle: {selectedAgent.visionAngle} \nMutation Chance: {selectedAgent.mutationChance} \nMutation Magnitude: {selectedAgent.mutationMagnitude} \nIs Fertile: {selectedAgent.isFertile()} \nOffspring No.: {selectedAgent.offspringCount}";
+            attributesText.text = $"Size: {selectedAgent.size} \nSpeed: {selectedAgent.speed} \nVision Distance: {selectedAgent.visionDistance} \nVision Angle: {selectedAgent.visionAngle} \nMutation Chance: {selectedAgent.mutationChance} \nMutation Magnitude: {selectedAgent.mutationMagnitude} \nIs Fertile: {selectedAgent.isFertile()} \nReproductive Cost: {selectedAgent.reproductionEnergyCost} \nOffspring No.: {selectedAgent.offspringCount}";
             //healthText.text = $"Health: {selectedAgent.health}";
 
         }

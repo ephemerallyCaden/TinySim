@@ -95,8 +95,8 @@ public class AgentInitialiser : MonoBehaviour
             baseMutationChanceMod,
             baseMutationMagnitudeMod,
             baseHealth,
-            baseMaxEnergy,
             baseMaxEnergy, //Starts at full energy initially to boost survival chance
+            baseMaxEnergy,
             baseMaxReproductionCooldown,
             baseReproductionEnergyCost,
             baseGenome,
