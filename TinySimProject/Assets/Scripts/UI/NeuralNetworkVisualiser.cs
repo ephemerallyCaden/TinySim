@@ -89,9 +89,9 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         //Fetch node visualiser positions
         Vector3 startPos = source.GetComponent<RectTransform>().anchoredPosition;
         Vector3 endPos = target.GetComponent<RectTransform>().anchoredPosition;
+        line.points = new Vector2[] { startPos, endPos };
 
         //Debugging
-        //line.points = new Vector2[] { startPos, endPos };
         //Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");
 
         //Fetch line colour
