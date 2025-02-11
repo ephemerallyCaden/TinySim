@@ -15,7 +15,7 @@ public static class AttributeCrossoverManager
         float maxReproductionCooldown,
         float reproductionEnergyCost
         )
-        CrossoverAttributes(Agent parent1, Agent parent2)
+    CrossoverAttributes(Agent parent1, Agent parent2)
     {
         // Average the attributes
         float size = (parent1.size + parent2.size) / 2f;
@@ -64,13 +64,13 @@ public static class AttributeCrossoverManager
         // Mutate colour
         if (random.NextDouble() < mutationChance)
         {
-            colour.r += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
-            colour.g += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
-            colour.b += (float)(random.NextDouble() - 0.5) * 0.1f * mutationMagnitude;
+            colour.r += (float)(random.NextDouble() - 0.5) * 0.2f * mutationMagnitude;
+            colour.g += (float)(random.NextDouble() - 0.5) * 0.2f * mutationMagnitude;
+            colour.b += (float)(random.NextDouble() - 0.5) * 0.2f * mutationMagnitude;
 
-            colour.r = Mathf.Clamp01(colour.r);
-            colour.g = Mathf.Clamp01(colour.g);
-            colour.b = Mathf.Clamp01(colour.b);
+            colour.r = Mathf.Repeat(colour.r, 1);
+            colour.g = Mathf.Repeat(colour.g, 1);
+            colour.b = Mathf.Repeat(colour.b, 1);
         }
 
         //Mutate Vision Distance

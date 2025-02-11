@@ -13,7 +13,7 @@ public class TerrainGenerator : MonoBehaviour
     [Header("Octave Settings")]
     public int octaves = 4;
     public float persistence = 0.5f;
-    public float lacunarity = 2.0f;
+    public float lacunarity = 2f;
 
     private void Start()
     {

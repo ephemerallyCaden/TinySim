@@ -6,14 +6,14 @@ public class TemperatureMap : MonoBehaviour
     public void GenerateTemperatureMap(int width, int height, float scale)
     {
         temperatureMap = new float[width, height];
-        float offsetX = Random.Range(0f, 9999f);
-        float offsetY = Random.Range(0f, 9999f);
+        float offsetX = Random.Range(0f, 99999f);
+        float offsetY = Random.Range(0f, 99999f);
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 // Use Perlin noise to generate temperature variation
-                float temperature = Mathf.PerlinNoise(x * scale + offsetX, y * scale + offsetY); // Adjust the scale as needed
+                float temperature = Mathf.PerlinNoise(x * scale + offsetX, y * scale + offsetY);
                 temperatureMap[x, y] = temperature + 0.5f;
             }
         }

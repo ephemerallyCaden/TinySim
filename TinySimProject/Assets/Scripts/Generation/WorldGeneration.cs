@@ -33,6 +33,7 @@ public class WorldGeneration : MonoBehaviour
     {
 
         SimulationManager.instance.worldSize = worldSize;
+        terrainOffset = new Vector2(Random.Range(0, 99999f), Random.Range(0, 99999f));
         // Generate Terrain
         terrainGenerator.GenerateTerrain(worldSize, worldSize, terrainScale, terrainOffset);
 
@@ -47,7 +48,7 @@ public class WorldGeneration : MonoBehaviour
 
         // Initialise agents
         agentInitialiser.InitialiseAgents();
-        
+
         //Spawn the first food
         FoodSpawner.instance.SpawnInitialFood();
 

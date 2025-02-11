@@ -10,7 +10,7 @@ public class FoodSpawner : MonoBehaviour
     public GameObject foodPrefab;
     public int initialFoodCount = 100;
     public float foodSpawnTime;
-    public float maxSpawnTime = 2f;
+    public float maxSpawnTime = 1f;
     public List<Food> foodList;
 
     // Queues for deferred modifications
@@ -19,8 +19,6 @@ public class FoodSpawner : MonoBehaviour
 
     [Header("World Settings")]
     public TemperatureMap temperatureMap;
-    public int worldSize;
-
     private void Awake()
     {
         if (instance == null)
@@ -111,7 +109,7 @@ public class FoodSpawner : MonoBehaviour
         int x = Mathf.FloorToInt(position.x);
         int y = Mathf.FloorToInt(position.y);
 
-        float spawnChance = temperatureMap.GetTemperatureAt(x, y);
-        return Random.value < spawnChance;
+        float temperature = temperatureMap.GetTemperatureAt(x, y);
+        return Random.value < temperature;
     }
 }
