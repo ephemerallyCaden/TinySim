@@ -99,14 +99,14 @@ public class NeuralNetwork
             nodeMap[node.id] = node;
         }
 
-        // Step 1: Count incoming dependencies for each node
+        // Count incoming dependencies for each node
         Dictionary<Node, int> dependencyCount = new Dictionary<Node, int>();
         foreach (var node in nodes)
         {
             dependencyCount[node] = node.incoming.Count;
         }
 
-        // Step 2: Initialize queue with nodes that have no dependencies (input/bias nodes)
+        // Initialise queue with nodes that have no dependencies (input nodes)
         Queue<Node> readyNodes = new Queue<Node>();
         foreach (var node in nodes)
         {
@@ -138,7 +138,7 @@ public class NeuralNetwork
             }
         }
 
-        // Step 4: Cycle detection
+        // Cycle detection
         if (evaluationOrder.Count != nodes.Count)
         {
             Debug.LogError("Cycle detected in neural network topology!!");
@@ -154,7 +154,7 @@ public class NeuralNetwork
             inputNodes[i].activation = inputValues[i];
         }
 
-        // Evaluate nodes in topological order
+        // Evaluate nodes in the evaluation order
         for (int i = 0; i < evaluationOrder.Count; i++)
         {
             Node node = evaluationOrder[i];
@@ -163,7 +163,7 @@ public class NeuralNetwork
                 double sum = node.bias;
                 var incoming = node.incoming;
 
-                // Fast iteration using for-loop
+                // Loop through and sum all incoming connection weights * incoming node activation values
                 for (int j = 0; j < incoming.Count; j++)
                 {
                     var c = incoming[j];

@@ -11,6 +11,7 @@ public class UserControlsUI : MonoBehaviour
 
     public void UpdateSimulationSpeed()
     {
+        //Updates simulation speed on slider value change
         simulationSpeedText.text = $"Simulation Speed: {simulationSpeedSlider.value}x";
         SimulationManager.instance.simulationSpeed = simulationSpeedSlider.value;
     }

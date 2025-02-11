@@ -26,6 +26,7 @@ public class AgentStatsUI : MonoBehaviour
         }
     }
 
+    // Functions to control AgentStats panel visibility
     public void ShowAgentStats(Agent agent)
     {
         selectedAgent = agent;
@@ -44,21 +45,23 @@ public class AgentStatsUI : MonoBehaviour
     {
         if (selectedAgent != null)
         {
+            //Update all text values
             nameText.text = $"ID: {selectedAgent.id}                Generation: {selectedAgent.generation}";
             energyText.text = $"Age: {selectedAgent.age} \nEnergy: {selectedAgent.energy} \nMax Energy: {selectedAgent.maxEnergy} \nHealth: {selectedAgent.health} \nMetabolism Cost: {selectedAgent.metabolismCost} \n";
             attributesText.text = $"Size: {selectedAgent.size} \nSpeed: {selectedAgent.speed} \nVision Distance: {selectedAgent.visionDistance} \nVision Angle: {selectedAgent.visionAngle} \nMutation Chance: {selectedAgent.mutationChance} \nMutation Magnitude: {selectedAgent.mutationMagnitude} \nIs Fertile: {selectedAgent.isFertile()} \nReproductive Cost: {selectedAgent.reproductionEnergyCost} \nOffspring No.: {selectedAgent.offspringCount}";
-            //healthText.text = $"Health: {selectedAgent.health}";
 
         }
     }
 
     private void Start()
     {
+        //Initially hide the panel as no agent is selected
         HideAgentStats();
     }
 
     private void Update()
     {
+        //Constantly update UI if the panel is active
         if (selectedAgent != null)
         {
             UpdateUI();

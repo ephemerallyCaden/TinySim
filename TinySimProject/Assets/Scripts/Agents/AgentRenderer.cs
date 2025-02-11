@@ -47,20 +47,22 @@ public class AgentRenderer : MonoBehaviour
                 Matrix4x4 bodyMatrix = Matrix4x4.TRS(
                     new Vector3(agent.position.x, agent.position.y, 0),
                     Quaternion.Euler(0, 0, agent.rotation), // Apply rotation based on agent's rotation
-                    Vector3.one * agent.size // Scale by size (diameter)
+                    Vector3.one * agent.size // Scale by size
                 );
 
-                renderMatrices.Add(bodyMatrix);
+                renderMatrices.Add(bodyMatrix); //Store the transformation body matrix
                 renderColours.Add(agent.colour); // Store the color of the agent
 
-                for (int i = 0; i < agent.eyeNumber; i++)
+                for (int i = 0; i < 2; i++)
                 {
+                    //Calculate the eye angle offset and its relative angle
                     float angleOffset = (i % 2 == 0) ? 30f : -30f;
+                    
                     float angle = agent.rotation + angleOffset;
-
                     angle = Mathf.Repeat(angle, 360);
                     if (angle < 180 && angle > 0) continue;
 
+                    //Calculate eye position
                     float distanceFromCenter = agent.size;
                     float eyeX = distanceFromCenter * Mathf.Cos(Mathf.Deg2Rad * angle);
                     float eyeY = distanceFromCenter * Mathf.Sin(Mathf.Deg2Rad * angle) / (agent.size * 2);
@@ -74,13 +76,13 @@ public class AgentRenderer : MonoBehaviour
                         Vector3.one * 0.25f
                     );
 
-                    renderMatrices.Add(eyeMatrix);
+                    renderMatrices.Add(eyeMatrix); //Store the transformation matrix for the eye
                     renderColours.Add(eyeColor); // Store the eye color
 
                 }
             }
         }
-        RenderInstancedMeshes(renderMatrices, renderColours); // Render bodies
+        RenderInstancedMeshes(renderMatrices, renderColours); // Render all circles
     }
 
     private void RenderInstancedMeshes(List<Matrix4x4> matrices, List<Vector4> colours)

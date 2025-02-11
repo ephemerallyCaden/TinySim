@@ -9,7 +9,7 @@ public class TerrainGenerator : MonoBehaviour
     public Tile[] tiles; // deep ocean, shallow ocean, sand, plains, deep plains, hills, mountains, peaks
 
 
-
+    //Octaves for more complex perlin noise
     [Header("Octave Settings")]
     public int octaves = 4;
     public float persistence = 0.5f;
@@ -18,15 +18,6 @@ public class TerrainGenerator : MonoBehaviour
     private void Start()
     {
         tilemap = FindObjectOfType<Tilemap>();
-
-        if (tilemap == null)
-        {
-            Debug.LogError("Tilemap not found");
-        }
-        else
-        {
-            Debug.Log("Tilemap found");
-        }
     }
 
     public void GenerateTerrain(float width, float height, float scale, Vector2 offset)
@@ -52,7 +43,7 @@ public class TerrainGenerator : MonoBehaviour
         float total = 0f;
         float frequency = 1f;
         float amplitude = 1f;
-        float maxValue = 0f; // Used for normalization
+        float maxValue = 0f; // Used for normalisation, to ensure a value not too large
 
         for (int i = 0; i < octaves; i++)
         {

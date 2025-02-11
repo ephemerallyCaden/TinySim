@@ -12,13 +12,14 @@ public class FoodSpawner : MonoBehaviour
     public float foodSpawnTime;
     public float maxSpawnTime = 1f;
     public List<Food> foodList;
+    public TemperatureMap temperatureMap;
 
     // Queues for deferred modifications
     private readonly List<Food> foodToAdd = new List<Food>();
     private readonly List<Food> foodToRemove = new List<Food>();
 
-    [Header("World Settings")]
-    public TemperatureMap temperatureMap;
+
+
     private void Awake()
     {
         if (instance == null)
@@ -39,6 +40,7 @@ public class FoodSpawner : MonoBehaviour
     {
         foodSpawnTime -= deltaTime;
 
+        // Spawn food if timer hits 0
         if (foodSpawnTime <= 0)
         {
             foodSpawnTime = maxSpawnTime;
@@ -47,9 +49,11 @@ public class FoodSpawner : MonoBehaviour
 
         foreach (Food food in foodList)
         {
+            // Null check for deleted food, and updating each food object
             if (food != null) food.UpdateFood(deltaTime);
         }
 
+        // Execute deferred modifications
         if (foodToAdd.Count > 0)
         {
             foodList.AddRange(foodToAdd);
@@ -66,6 +70,7 @@ public class FoodSpawner : MonoBehaviour
         }
     }
 
+    // Spawn initial food
     public void SpawnInitialFood()
     {
         for (int i = 0; i < initialFoodCount; i++)
@@ -83,9 +88,8 @@ public class FoodSpawner : MonoBehaviour
             Food food = foodObject.GetComponent<Food>();
 
             food.position = randomPosition;
-
+            // Notify Manager object
             FoodListAdd(food);
-            //Debug.Log($"Spawned food at: {randomPosition}");
         }
     }
 
@@ -104,6 +108,7 @@ public class FoodSpawner : MonoBehaviour
         return new Vector2(randomX, randomY);
     }
 
+    // Check based on temperature map, the probability of food spawning
     private bool FoodCheck(Vector2 position)
     {
         int x = Mathf.FloorToInt(position.x);

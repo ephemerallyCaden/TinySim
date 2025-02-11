@@ -87,7 +87,7 @@ public static class AttributeCrossoverManager
             visionAngle = Mathf.Clamp(visionAngle, 0f, 360f); // Clamp to reasonable values
         }
 
-        //MutationChance and MutationMag Modifiers
+        //Mutate MutationChance and MutationMag Modifiers
         if (random.NextDouble() < mutationChance)
         {
             mutationChanceMod += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
@@ -96,7 +96,7 @@ public static class AttributeCrossoverManager
             mutationMagnitudeMod += (float)(random.NextDouble() - 0.5) * mutationMagnitude;
             mutationMagnitudeMod = Mathf.Clamp(mutationMagnitudeMod, 0.01f, 10f); // Clamp to reasonable values
         }
-
+        //Mutate the reproductionCooldown maximum, and the reproductionEnergyCost
         if (random.NextDouble() < mutationChance)
         {
             maxReproductionCooldown += (float)(random.NextDouble() - 0.5) * mutationMagnitude;

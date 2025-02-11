@@ -7,7 +7,7 @@ public class AgentInitialiser : MonoBehaviour
 {
     [NonSerialized] public int initialAgentCount;
 
-    [Header("Base Attribute Variables")]
+    //Base Attribute Variables
     [NonSerialized] public float baseSize = 1.0f;
     [NonSerialized] public float baseSpeed = 2.0f;
     [NonSerialized] public Color baseColour = Color.grey;
@@ -20,11 +20,11 @@ public class AgentInitialiser : MonoBehaviour
     [NonSerialized] public float baseMaxReproductionCooldown = 20f;
     [NonSerialized] public float baseReproductionEnergyCost = 30f;
 
-    [Header("Genome Variables")]
+    //Base Genome Variables
     [NonSerialized] public int baseInputNum = 13;
     [NonSerialized] public int baseOutputNum = 3;
 
-
+    //Agent Spawning Variables
     [NonSerialized] public float spawnRadius = 10f;
     [NonSerialized] public Vector3 spawnCenter = Vector3.zero;
 
@@ -34,6 +34,7 @@ public class AgentInitialiser : MonoBehaviour
 
     public void InitialiseAgents()
     {
+        //Switch using an enumerator based on spawn pattern
         switch (spawnPattern)
         {
             case SpawnPattern.Central:
@@ -48,6 +49,7 @@ public class AgentInitialiser : MonoBehaviour
         }
     }
 
+    //Get a position around a central point
     private Vector3 GetCircularPosition(Vector3 center, float radius)
     {
         float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2);
@@ -87,7 +89,7 @@ public class AgentInitialiser : MonoBehaviour
         AgentManager.instance.CreateAgent(
             0, //GENERATION NUMBER
             position,
-            baseSize + UnityEngine.Random.Range(-0.5f, 0.5f),
+            baseSize + UnityEngine.Random.Range(-0.5f, 0.5f), //Add a slight mutation on base size and speed for randomness
             baseSpeed + UnityEngine.Random.Range(-0.5f, 0.5f),
             randomColour,
             baseVisionDistance,
@@ -104,13 +106,13 @@ public class AgentInitialiser : MonoBehaviour
         );
     }
 
-    // Create a Neural Network from the Genome
-
     private Genome GenerateBaseGenome()
     {
-
+        // Creates a base genome with everything empty aside from 
         List<NodeGene> nodeGenes = new List<NodeGene>();
+        List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
 
+        //Add default input and outputs nodes to nodeGenes
         for (int i = 0; i < baseInputNum; i++)
         {
             nodeGenes.Add(new NodeGene(i, NodeType.Input, 0.0, ActivationFunctions.Sigmoid));
@@ -120,14 +122,15 @@ public class AgentInitialiser : MonoBehaviour
         {
             nodeGenes.Add(new NodeGene(baseInputNum + o, NodeType.Output, 0.0, ActivationFunctions.Tanh));
         }
-        List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
+
+        //Create a random initial connection in the base genome
         int randomSource = UnityEngine.Random.Range(0, baseInputNum);
         int randomTarget = UnityEngine.Random.Range(baseInputNum, baseInputNum + baseOutputNum - 1);
+
         LinkID temp = new LinkID(InnovationTracker.GetInnovation(randomSource, randomTarget), randomSource, randomTarget);
         connectionGenes.Add(new ConnectionGene(temp, 1.0, true));
-        //temp = new LinkID(InnovationTracker.GetInnovation(0, 14), 0, 14);
-        //connectionGenes.Add(new ConnectionGene(temp, 1.0, true));
 
+        //Generate the genome
         Genome genome = new Genome(nodeGenes, connectionGenes);
         return genome;
     }

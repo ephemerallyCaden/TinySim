@@ -36,12 +36,12 @@ public class CrossoverManager
             // Add the chosen gene to the child
             child.connectionGenes.Add(new ConnectionGene(gene.linkid, gene.weight, gene.enabled));
         }
-        // Collect all the node IDs used in the connections (inputNodeId and outputNodeId)
+        // Collect all the node IDs used in the connections
         List<int> usedNodes = new List<int>();
 
         foreach (var conn in child.connectionGenes)
         {
-            // Add both input and output node IDs to the list
+            // Add both source and target node IDs to the list
             if (!usedNodes.Contains(conn.linkid.source))
                 usedNodes.Add(conn.linkid.source);
 
@@ -50,6 +50,7 @@ public class CrossoverManager
         }
 
         // Add only the nodes that are used in the connections to the child nodeGenes
+        // Also add input and output nodes
         foreach (NodeGene nodegene in parent1.nodeGenes)
         {
             if ((usedNodes.Contains(nodegene.id) || nodegene.type != NodeType.Hidden) && !child.nodeGenes.Any(n => n.id == nodegene.id))

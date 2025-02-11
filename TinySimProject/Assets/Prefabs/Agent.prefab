@@ -93,10 +93,10 @@ MonoBehaviour:
   mutationMagnitude: 0
   mutationChance: 0
   generation: 0
-  age: 0
-  health: 0
-  maxEnergy: 0
-  energy: 0
+  age: 19.54
+  health: 100
+  maxEnergy: 10
+  energy: 10
   metabolismCost: 0
   movementCost: 0
   birthTime: 0
@@ -119,3 +119,5 @@ MonoBehaviour:
   maxReproductionCooldown: 0
   reproductionRange: 0
   reproductionMod: 5
+  offspringCount: 0
+  eatingRadius: 0

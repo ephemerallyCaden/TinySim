@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 
 public enum NodeType { Input, Hidden, Output };
+
+//A gene to store node information
 public class NodeGene
 {
     public int id;
@@ -20,7 +22,7 @@ public class NodeGene
 }
 public class LinkID
 {
-    public int id; //acting as the innovation number
+    public int id; // acting as the innovation number
     public int source;
     public int target;
 
@@ -32,6 +34,7 @@ public class LinkID
     }
 }
 
+// a gene to store connection information
 public class ConnectionGene
 {
     public LinkID linkid;
@@ -46,7 +49,7 @@ public class ConnectionGene
     }
 }
 
-
+// Genome class
 public class Genome
 {
     public List<NodeGene> nodeGenes;

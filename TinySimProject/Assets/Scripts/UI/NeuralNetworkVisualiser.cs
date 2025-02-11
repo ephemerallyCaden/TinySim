@@ -7,7 +7,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
 {
     [Header("Visualisation Variables")]
     public GameObject nodePrefab; // UI element for nodes
-    public GameObject connectionPrefab; // LineRenderer for connections
+    public GameObject connectionPrefab; // UILineRenderer for connections
     public Transform canvasParent; // UI parent for drawing
     private List<GameObject> instantiatedObjects = new List<GameObject>();
 
@@ -26,39 +26,39 @@ public class NeuralNetworkVisualiser : MonoBehaviour
 
         Dictionary<int, GameObject> nodeObjects = new Dictionary<int, GameObject>();
 
-        // Calculate Y positions
+        // Calculate starting Y positions based on number of nodes
         inputStartingY = 0.5f * network.inputNodes.Count * spacingY + offsetY;
         outputStartingY = 0.5f * network.outputNodes.Count * spacingY + offsetY;
         hiddenStartingY = 0.5f * (network.nodes.Count - 15) * hiddenLayerSpacing + offsetY;
 
-        // Create input nodes
+        // Create input node visualisers
         for (int i = 0; i < network.inputNodes.Count; i++)
         {
             Node node = network.inputNodes[i];
             nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor, inputStartingY - (i * spacingY)));
         }
 
-        // Create output nodes
+        // Create output node visualisers
         for (int o = 0; o < network.outputNodes.Count; o++)
         {
             Node node = network.outputNodes[o];
             nodeObjects[node.id] = CreateNode(node, new Vector2(leftAnchor + 600f, outputStartingY - (o * spacingY)));
         }
 
-        // Create hidden nodes (evenly spaced)
+        // Create hidden node visualisers (evenly spaced with hiddenLayerSpacing)
         int hiddenLayerIndex = 0;
         foreach (Node node in network.nodes)
         {
             if (node.type == NodeType.Hidden)
             {
-                float xPos = Random.Range(leftAnchor + 200, leftAnchor + 400); // Avoid overlap
+                float xPos = Random.Range(leftAnchor + 200, leftAnchor + 400); // Avoid overlap with a random x position
                 float yPos = hiddenStartingY - hiddenLayerIndex * hiddenLayerSpacing; // Space out layers
                 nodeObjects[node.id] = CreateNode(node, new Vector2(xPos, yPos));
                 hiddenLayerIndex++;
             }
         }
 
-        // Create connections
+        // Create connections visualiser
         foreach (Connection connection in network.connections)
         {
             if (connection.enabled &&
@@ -82,20 +82,22 @@ public class NeuralNetworkVisualiser : MonoBehaviour
 
     private void CreateConnection(GameObject source, GameObject target, double weight)
     {
+        //Instantiate line object
         GameObject lineObj = Instantiate(connectionPrefab, canvasParent);
         UILineRenderer line = lineObj.GetComponent<UILineRenderer>();
-        RectTransform rectTransform = lineObj.GetComponent<RectTransform>();
 
-
-        // Convert UI positions (anchoredPosition) to world positions
+        //Fetch node visualiser positions
         Vector3 startPos = source.GetComponent<RectTransform>().anchoredPosition;
         Vector3 endPos = target.GetComponent<RectTransform>().anchoredPosition;
 
-        line.points = new Vector2[] { startPos, endPos };
-        Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");
+        //Debugging
+        //line.points = new Vector2[] { startPos, endPos };
+        //Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");
+
+        //Fetch line colour
         line.color = WeightToColour(weight);
 
-        // Ensure the LineRenderer is visible
+
         instantiatedObjects.Add(lineObj);
     }
 
@@ -107,6 +109,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
 
     private void ClearVisualisation()
     {
+        // Destroy all visualiser objects
         foreach (GameObject obj in instantiatedObjects)
         {
             Destroy(obj);

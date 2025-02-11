@@ -194,6 +194,7 @@ public class MutationManager
         }
     }
 
+    // Gets a random activation function
     private static Func<double, double> GetRandomActivationFunction()
     {
         int functionIndex = UnityEngine.Random.Range(0, 4);

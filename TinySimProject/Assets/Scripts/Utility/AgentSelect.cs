@@ -9,13 +9,13 @@ public class AgentSelect : MonoBehaviour
 
     private void Start()
     {
-        mainCamera = Camera.main; // Cache the main camera
+        mainCamera = Camera.main; // Cache the main camera for quick access
     }
 
     private void Update()
     {
-        // Check for mouse click
-        if (Input.GetMouseButtonDown(0)) // Left mouse button
+        // Check for left mouse click
+        if (Input.GetMouseButtonDown(0))
         {
             SelectAgent();
         }

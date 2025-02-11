@@ -15,17 +15,20 @@ public class Food : MonoBehaviour
 
     private void Start()
     {
-        despawnTime = Random.Range(800f, 1200f);
+        //Instantiate variables
         position = transform.position;
+
+        despawnTime = Random.Range(800f, 1200f);
         timer = despawnTime;
+
         nutritionValue = Random.Range(10f, 40f);
         size = nutritionValue * 0.01f;
-
         col.radius = size;
     }
 
     public void UpdateFood(float deltaTime)
     {
+        //Spawn food if the timer hits 0
         timer -= deltaTime;
 
         if (timer <= 0f)
@@ -34,9 +37,12 @@ public class Food : MonoBehaviour
         }
     }
 
+    //Despawn Food
     private void DespawnFood()
     {
+        //Notify the manager object for removal of food
         FoodSpawner.instance.FoodListRemove(this);
+        
         Destroy(gameObject);
     }
 

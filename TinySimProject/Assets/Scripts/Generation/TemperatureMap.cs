@@ -6,6 +6,7 @@ public class TemperatureMap : MonoBehaviour
     public void GenerateTemperatureMap(int width, int height, float scale)
     {
         temperatureMap = new float[width, height];
+        // Set a random seed
         float offsetX = Random.Range(0f, 99999f);
         float offsetY = Random.Range(0f, 99999f);
         for (int x = 0; x < width; x++)

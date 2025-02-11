@@ -7,20 +7,20 @@ public class Agent : MonoBehaviour
 {
     public int id;
     // Agent Characteristics (can mutate)
-    public Vector3 position;
-    public float rotation;
-    public float size;                // Size of the agent
-    public float speed;               // Base speed
+    public Vector3 position;           //Agent current position
+    public float rotation;             //Agent current rotation
+    public float size;                 // Size of the agent
+    public float speed;                // Base speed
     public float visionDistance = 10f; // How far the agent can see
-    public float visionAngle = 90f;   // Field of view in degrees
+    public float visionAngle = 90f;    // Field of view in degrees
     public Color colour;               // Agent's colour
-    public float mutationMagnitudeMod;
-    public float mutationChanceMod;
-    public float mutationMagnitude;
-    public float mutationChance;
+    public float mutationMagnitudeMod; //Mutation magnitude modifier
+    public float mutationChanceMod;    //Mutation chance modifier
+    public float mutationMagnitude;    //Mutation magnitude
+    public float mutationChance;       //Mutation chance
 
     // Agent State
-    public int generation;
+    public int generation;            //Current agent generation
     public float age;                 // Current age (world time - birth time)
     public float health;              // Current health
     public float maxEnergy;           // Maximum energy capacity
@@ -33,20 +33,20 @@ public class Agent : MonoBehaviour
     public NeuralNetwork network;       // The agent's neural network
     public Genome genome;             // The agent's genome
 
-    // Inputs (preallocated list)
+    // Inputs and outputs (preallocated list)
     public double[] inputs;
     public double[] outputs;
 
     // Outputs
-    public float movementSpeed;       // Movement speed (-1 to 1)
+    public float movementSpeed;       // Movement speed
     public float speedMax = 10f;
-    public float turningRate;         // Turning rate (-1 to 1)
+    public float turningRate;         // Turning rate
     public float turnRateMax = 10f;
     public float desireValue;         // Desire value (used for decision-making)
 
     // Environment Sensors
-    public LayerMask agentLayer = 8;   // Layer for agents
-    public LayerMask foodLayer = 7;       // Layer for food
+    public LayerMask agentLayer = 8;   // Sorting layer for agents
+    public LayerMask foodLayer = 7;       // Sorting layer for food
 
     // Closest objects
     private Agent closestAgent;
@@ -57,27 +57,30 @@ public class Agent : MonoBehaviour
     float closestFoodAngle;
     private Collider2D[] hitList = new Collider2D[20];
     private CircleCollider2D col;
-    //Visuals
-    public int eyeNumber;
+
 
 
     // Reproduction Variables
     public float reproductionCooldown;      // Time required between reproductions
     public float reproductionEnergyCost;    // Energy required to reproduce
-    public float maxReproductionCooldown;   // Mutates to change reproductive strategy
-    public float reproductionRange;  // Max distance to mate with another agent
-    public float reproductionMod = 5f;
-    public int offspringCount = 0;
-    public float eatingRadius;
+    public float maxReproductionCooldown;   // Reproduction cooldown max initially
+    public float reproductionRange;         // Max distance to mate with another agent
+    public float reproductionMod = 5f;      //Reproduction cooldown modifier
+    public int offspringCount = 0;          //No. of offspring agent has
+    public float eatingRadius;              //Size of radius around the agent that it can eat from
     private void Start()
     {
-        //Variable Calculations
+
+        //Metabolism cost is subtracted every frame from energy, calculated from agent speed and size
         metabolismCost = (0.3f * speed) + (0.3f * size);
+
         reproductionCooldown = maxReproductionCooldown;
 
+        //Collision variable calculation
         col = GetComponent<CircleCollider2D>();
         col.radius = size * 1.5f;
         eatingRadius = size + 0.2f;
+
         // Global mutation parameters from the SimulationManager
         float globalMutationChance = SimulationManager.instance.globalMutationChance;
         float globalMutationMagnitude = SimulationManager.instance.globalMutationMagnitude;
@@ -86,7 +89,6 @@ public class Agent : MonoBehaviour
         mutationChance = globalMutationChance * (1 + mutationChanceMod);
         mutationMagnitude = globalMutationMagnitude * (1 + mutationMagnitudeMod);
 
-        eyeNumber = ((int)visionDistance + 16) / 16 * 2;
         // Preallocate inputs
         InitialiseNetworkVariables();
 
@@ -106,7 +108,7 @@ public class Agent : MonoBehaviour
         {
             inputs[i] = 0.0; // Initialise with default values
         }
-        outputs = new double[network.outputNodes.Count]; // Preallocate for 13 inputs
+        outputs = new double[network.outputNodes.Count]; // Preallocate for 3 outputs
         for (int i = 0; i < network.outputNodes.Count; i++)
         {
             outputs[i] = 0.0; // Initialise with default values
@@ -289,7 +291,7 @@ public class Agent : MonoBehaviour
         if (closestAgent == null || closestAgentDistance > reproductionRange) return;
         if (!isFertile() || !closestAgent.isFertile()) return;
 
-        // Ensure the older agent is the one initiating reproduction
+        // Random agent is parent1, as there is no fitness in RT-NEAT
         Agent parent1 = UnityEngine.Random.value > 0.5 ? this : closestAgent;
         Agent parent2 = parent1 == this ? closestAgent : this;
 
@@ -298,7 +300,7 @@ public class Agent : MonoBehaviour
         // Create offspring
         ReproductionManager.Reproduce(parent1, parent2, offspringPosition);
 
-        // Apply reproduction costs
+        // Apply reproduction costs and increment data
         parent1.energy -= parent1.reproductionEnergyCost;
         parent2.energy -= parent2.reproductionEnergyCost;
         parent1.reproductionCooldown = maxReproductionCooldown + UnityEngine.Random.Range(-reproductionMod, reproductionMod);
@@ -317,7 +319,6 @@ public class Agent : MonoBehaviour
         // Notify AgentManager or other systems
         AgentManager.instance.AgentListRemove(this);
 
-        // Destroy the agent
         Destroy(gameObject);
     }
 
@@ -334,17 +335,4 @@ public class Agent : MonoBehaviour
             }
         }
     }
-    // Debugging: Draw vision cone in the editor
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-
-        Gizmos.DrawWireSphere(transform.position, visionDistance);
-
-        Vector3 leftBoundary = Quaternion.Euler(0, 0, -visionAngle) * transform.up * visionDistance;
-        Vector3 rightBoundary = Quaternion.Euler(0, 0, visionAngle) * transform.up * visionDistance;
-        Gizmos.DrawLine(transform.position, transform.position + leftBoundary);
-        Gizmos.DrawLine(transform.position, transform.position + rightBoundary);
-    }
-
 }

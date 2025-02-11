@@ -9,6 +9,7 @@ public class GlobalStatsUI : MonoBehaviour
 
     public void UpdateUI()
     {
+        // Update statistics text
         statsText.text = $"Time: {(int)SimulationManager.instance.worldTime} \nGeneration: {AgentManager.instance.avgGeneration} \nPopulation: {AgentManager.instance.population}";
     }
     private void FixedUpdate()

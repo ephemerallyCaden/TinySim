@@ -26,12 +26,13 @@ public class AgentManager : MonoBehaviour
 
     public void UpdateAgents(float deltaTime)
     {
+        //Calculate current population
         population = agents.Count;
+
         generationSum = 0;
         if (population < maxPopulation)
         {
             // Update all agents
-
             for (int i = agents.Count - 1; i >= 0; i--)
             {
                 if (agents[i] == null)
@@ -40,6 +41,7 @@ public class AgentManager : MonoBehaviour
                     continue;
                 }
                 agents[i].UpdateAgent(deltaTime);
+                //Work out the total of agent generations to average
                 generationSum += agents[i].generation;
                 agents[i].UpdateReproduction(deltaTime);
 
@@ -59,7 +61,7 @@ public class AgentManager : MonoBehaviour
                 generationSum += agents[i].generation;
             }
         }
-
+        //Calculate the average generation number of all agents
         if (population > 0) avgGeneration = generationSum / population;
         else avgGeneration = -1;
 
