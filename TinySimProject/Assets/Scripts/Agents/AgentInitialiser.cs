@@ -121,7 +121,6 @@ public class AgentInitialiser : MonoBehaviour
             nodeGenes.Add(new NodeGene(baseInputNum + o, NodeType.Output, 0.0, ActivationFunctions.Tanh));
         }
         List<ConnectionGene> connectionGenes = new List<ConnectionGene>();
-
         int randomSource = UnityEngine.Random.Range(0, baseInputNum);
         int randomTarget = UnityEngine.Random.Range(baseInputNum, baseInputNum + baseOutputNum - 1);
         LinkID temp = new LinkID(InnovationTracker.GetInnovation(randomSource, randomTarget), randomSource, randomTarget);

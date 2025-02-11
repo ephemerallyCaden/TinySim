@@ -15,9 +15,10 @@ public class NeuralNetworkVisualiser : MonoBehaviour
     private float leftAnchor = -750;
     private float inputStartingY;
     private float outputStartingY;
+    private float hiddenStartingY;
     private float spacingY = 32f;
     private float offsetY = 200f;
-    private float hiddenLayerSpacing = 75f; // Space between hidden layers
+    private float hiddenLayerSpacing = 50f; // Space between hidden layers
 
     public void Visualise(NeuralNetwork network)
     {
@@ -28,6 +29,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         // Calculate Y positions
         inputStartingY = 0.5f * network.inputNodes.Count * spacingY + offsetY;
         outputStartingY = 0.5f * network.outputNodes.Count * spacingY + offsetY;
+        hiddenStartingY = 0.5f * (network.nodes.Count - 15) * hiddenLayerSpacing + offsetY;
 
         // Create input nodes
         for (int i = 0; i < network.inputNodes.Count; i++)
@@ -50,7 +52,7 @@ public class NeuralNetworkVisualiser : MonoBehaviour
             if (node.type == NodeType.Hidden)
             {
                 float xPos = Random.Range(leftAnchor + 200, leftAnchor + 400); // Avoid overlap
-                float yPos = offsetY + hiddenLayerIndex * hiddenLayerSpacing; // Space out layers
+                float yPos = hiddenStartingY - hiddenLayerIndex * hiddenLayerSpacing; // Space out layers
                 nodeObjects[node.id] = CreateNode(node, new Vector2(xPos, yPos));
                 hiddenLayerIndex++;
             }
@@ -91,16 +93,16 @@ public class NeuralNetworkVisualiser : MonoBehaviour
 
         line.points = new Vector2[] { startPos, endPos };
         Debug.Log($"Positions: ({startPos.x}, {startPos.y}) ({endPos.x}, {endPos.y})");
-        line.color = WeightToColor(weight);
+        line.color = WeightToColour(weight);
 
         // Ensure the LineRenderer is visible
         instantiatedObjects.Add(lineObj);
     }
 
-    private Color WeightToColor(double weight)
+    private Color WeightToColour(double weight)
     {
-        float normalizedWeight = Mathf.Clamp((float)weight, -1f, 1f); // Keep in range [-1, 1]
-        return Color.Lerp(Color.red, Color.green, (normalizedWeight + 1f) / 2f); // -1 = Red, 1 = Green, 0 = Yellow
+        float normalisedWeight = Mathf.Clamp((float)weight, -1f, 1f); // Keep in range [-1, 1]
+        return Color.Lerp(Color.red, Color.green, (normalisedWeight + 1f) / 2f); // -1 = Red, 1 = Green, 0 = Yellow
     }
 
     private void ClearVisualisation()
