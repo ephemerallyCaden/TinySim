@@ -6,22 +6,9 @@ public class AgentInitialiser : MonoBehaviour
 {
     [NonSerialized] public int initialAgentCount;
 
-    //Base Attribute Variables
-    [NonSerialized] public float baseSize = 1.0f;
-    [NonSerialized] public float baseSpeed = 2.0f;
-    [NonSerialized] public Color baseColour = Color.grey;
-    [NonSerialized] public float baseVisionDistance = 10f;
-    [NonSerialized] public float baseVisionAngle = 90f;
-    [NonSerialized] public float baseMutationChanceMod = 1f;
-    [NonSerialized] public float baseMutationMagnitudeMod = 1f;
-    [NonSerialized] public float baseMaxEnergy = 200f;
-    [NonSerialized] public float baseHealth = 100f;
-    [NonSerialized] public float baseMaxReproductionCooldown = 10f;
-    [NonSerialized] public float baseReproductionEnergyCost = 20f;
-    [NonSerialized] public float baseReproductionRange = 20f;
 
     //Base Genome Variables
-    [NonSerialized] public int baseInputNum = 17;
+    [NonSerialized] public int baseInputNum = 22;
     [NonSerialized] public int baseOutputNum = 3;
 
     //Agent Spawning Variables
@@ -31,10 +18,14 @@ public class AgentInitialiser : MonoBehaviour
     public enum SpawnPattern { Central, Clusters, Random }
     [NonSerialized] public SpawnPattern spawnPattern = SpawnPattern.Central;
     [NonSerialized] public bool uniformStart = false; // All agents identical — no randomness
-    [NonSerialized] public int numberOfClusters = 5;
+    [NonSerialized] public int numberOfClusters;
 
     public void InitialiseAgents()
     {
+        // Conditionally add attack output when predation is enabled
+        SimulationConfig cfg = SimulationManager.instance.config;
+        baseOutputNum = cfg.enablePredation ? 4 : 3;
+
         // Initialise innovation tracker with correct node ID offset
         InnovationTracker.Initialise(baseInputNum, baseOutputNum);
 
@@ -94,23 +85,24 @@ public class AgentInitialiser : MonoBehaviour
         NeuralNetwork baseNetwork = new NeuralNetwork(baseGenome);
 
         AgentAttributes attrs;
+        SimulationConfig cfg = SimulationManager.instance.config;
 
         if (uniformStart)
         {
-            attrs.colour = baseColour;
-            attrs.size = baseSize;
-            attrs.speed = baseSpeed;
-            attrs.visionDistance = baseVisionDistance;
-            attrs.visionAngle = baseVisionAngle;
-            attrs.mutationChanceMod = baseMutationChanceMod;
-            attrs.mutationMagnitudeMod = baseMutationMagnitudeMod;
-            attrs.maxReproductionCooldown = baseMaxReproductionCooldown;
-            attrs.reproductionEnergyCost = baseReproductionEnergyCost;
-            attrs.reproductionRange = baseReproductionRange;
+            attrs.colour = Color.grey;
+            attrs.size = cfg.baseSize;
+            attrs.speed = cfg.baseSpeed;
+            attrs.visionDistance = cfg.baseVisionDistance;
+            attrs.visionAngle = cfg.baseVisionAngle;
+            attrs.mutationChanceMod = cfg.baseMutationChanceMod;
+            attrs.mutationMagnitudeMod = cfg.baseMutationMagnitudeMod;
+            attrs.maxReproductionCooldown = cfg.baseMaxReproductionCooldown;
+            attrs.reproductionEnergyCost = cfg.baseReproductionEnergyCost;
+            attrs.dietPreference = cfg.baseDietPreference;
+            attrs.attackDamage = cfg.enablePredation ? cfg.baseAttackDamage : 0f;
         }
         else
         {
-            SimulationConfig cfg = SimulationManager.instance.config;
             attrs.colour = new Color(SimRandom.NextFloat(), SimRandom.NextFloat(), SimRandom.NextFloat(), 1f);
             attrs.size = SimRandom.Range(cfg.initialSizeMin, cfg.initialSizeMax);
             attrs.speed = SimRandom.Range(cfg.initialSpeedMin, cfg.initialSpeedMax);
@@ -120,16 +112,19 @@ public class AgentInitialiser : MonoBehaviour
             attrs.mutationMagnitudeMod = SimRandom.Range(cfg.initialMutationMagnitudeModMin, cfg.initialMutationMagnitudeModMax);
             attrs.maxReproductionCooldown = SimRandom.Range(cfg.initialMaxRepCooldownMin, cfg.initialMaxRepCooldownMax);
             attrs.reproductionEnergyCost = SimRandom.Range(cfg.initialRepEnergyCostMin, cfg.initialRepEnergyCostMax);
-            attrs.reproductionRange = SimRandom.Range(cfg.initialRepRangeMin, cfg.initialRepRangeMax);
+            attrs.dietPreference = SimRandom.Range(cfg.initialDietPreferenceMin, cfg.initialDietPreferenceMax);
+            attrs.attackDamage = cfg.enablePredation
+                ? SimRandom.Range(cfg.initialAttackDamageMin, cfg.initialAttackDamageMax)
+                : 0f;
         }
 
+        float maxEnergy = attrs.size * cfg.maxEnergyPerSize;
         AgentManager.instance.CreateAgent(
             0,
             position,
             attrs,
-            baseHealth,
-            baseMaxEnergy,
-            baseMaxEnergy,
+            maxEnergy,
+            maxEnergy,
             baseGenome,
             baseNetwork
         );
@@ -158,28 +153,25 @@ public class AgentInitialiser : MonoBehaviour
         int turnOutput = baseInputNum + 1;  // Output 1: turning rate
 
         // Input indices of interest:
-        // 0 = bias (always 1), 3 = hungriness, 10 = food proximity, 11 = food angle (signed)
+        // 0 = bias (always 1), 3 = hunger, 13 = food proximity, 14 = food angle (signed)
 
         // Give a baseline forward drive: bias -> movement (so agents move by default)
         AddConnection(connectionGenes, 0, moveOutput, uniformStart ? 0.5f : SimRandom.Range(0.3f, 0.8f));
 
         // Food angle -> turning rate (signed input handles direction, weight just sets responsiveness)
-        AddConnection(connectionGenes, 11, turnOutput, uniformStart ? 1.0f : SimRandom.Range(0.5f, 1.5f));
+        AddConnection(connectionGenes, 14, turnOutput, uniformStart ? 1.0f : SimRandom.Range(0.5f, 1.5f));
 
         // Food proximity -> movement speed (speed up when food is close)
-        AddConnection(connectionGenes, 10, moveOutput, uniformStart ? 0.4f : SimRandom.Range(0.2f, 0.6f));
+        AddConnection(connectionGenes, 13, moveOutput, uniformStart ? 0.4f : SimRandom.Range(0.2f, 0.6f));
 
-        // Add random connections for diversity (skip in uniform mode)
+        // Add one random connection for diversity (skip in uniform mode)
         if (!uniformStart)
         {
-            for (int r = 0; r < 2; r++)
+            int src = SimRandom.NextInt(baseInputNum);
+            int tgt = SimRandom.Range(baseInputNum, baseInputNum + baseOutputNum);
+            if (!connectionGenes.Exists(c => c.linkid.source == src && c.linkid.target == tgt))
             {
-                int src = SimRandom.NextInt(baseInputNum);
-                int tgt = SimRandom.Range(baseInputNum, baseInputNum + baseOutputNum);
-                if (!connectionGenes.Exists(c => c.linkid.source == src && c.linkid.target == tgt))
-                {
-                    AddConnection(connectionGenes, src, tgt, SimRandom.Range(-1f, 1f));
-                }
+                AddConnection(connectionGenes, src, tgt, SimRandom.Range(-1f, 1f));
             }
         }
 

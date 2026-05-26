@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Caches Agent/Food component lookups by Collider2D to avoid expensive GetComponent calls in the vision loop.
-/// Components register/unregister themselves at Start/OnDestroy.
-/// </summary>
+// Caches Agent/Food component lookups by Collider2D to avoid expensive GetComponent calls
+// Components register/unregister themselves at Start/OnDestroy.
 public static class AgentComponentCache
 {
     private static readonly Dictionary<Collider2D, Agent> _agents = new Dictionary<Collider2D, Agent>();

@@ -12,28 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d30c07ec8d5e540668cc486d81ebbc9e, type: 3}
   m_Name: SimulationConfig
   m_EditorClassIdentifier: 
-  worldSize: 256
+  worldSize: 200
   seed: -1
+  temperatureScale: 3
+  coldSkewPower: 1.472401
+  spawnPattern: 2
+  uniformStart: 0
   maxPopulation: 500
-  initialAgentCount: 200
+  initialAgentCount: 500
   metabolismSpeedFactor: 0.02
-  metabolismSizeFactor: 0.05
-  metabolismBrainFactor: 0.005
+  metabolismSizeFactor: 0.03
+  metabolismBrainFactor: 0
   movementCostFactor: 0.01
-  metabolismTurnFactor: 0.03
+  metabolismTurnFactor: 0.02
   movementDampening: 0.5
   turnRateScale: 10
-  agingOnsetAge: 2000
+  agingOnsetAge: 8000
   agingRateMultiplier: 0.002
-  starvationHealthDrainRate: 10
+  starvationHealthDrainRate: 4
   ageSaturationCap: 500
   collisionRadiusScale: 1.5
-  eatingRadiusPadding: 0.2
+  eatingRadius: 1
+  reproductionRange: 2
+  attackRange: 2
   maxAgentSpeed: 10
-  maxTurnRate: 10
-  reproductionRange: 8
-  offspringHealthBase: 100
-  offspringEnergyMultiplier: 2.5
+  maxTurnRate: 360
+  healthPerSize: 50
+  offspringEnergyMultiplier: 1.5
   maxEnergyPerSize: 200
   parentReproductionEnergyCost: 10
   reproductionCostScaling: 0.1
@@ -62,8 +67,17 @@ MonoBehaviour:
   maxReproductionCooldown: 400
   minReproductionEnergyCost: 20
   maxReproductionEnergyCost: 100
-  minReproductionRange: 1
-  maxReproductionRange: 50
+  baseSize: 1.2640129
+  baseSpeed: 14.152411
+  baseVisionDistance: 29.716484
+  baseVisionAngle: 117.63655
+  baseMaxEnergy: 200
+  baseMutationChanceMod: 0.34780666
+  baseMutationMagnitudeMod: 3.1684053
+  baseMaxReproductionCooldown: 45.909645
+  baseReproductionEnergyCost: 11.477411
+  baseDietPreference: 0.2830819
+  baseAttackDamage: 10.472367
   initialSizeMin: 0.5
   initialSizeMax: 2
   initialSpeedMin: 1
@@ -71,39 +85,56 @@ MonoBehaviour:
   initialVisionDistanceMin: 20
   initialVisionDistanceMax: 40
   initialVisionAngleMin: 45
-  initialVisionAngleMax: 180
-  initialMutationChanceModMin: 0.5
-  initialMutationChanceModMax: 2
+  initialVisionAngleMax: 360
+  initialMutationChanceModMin: 0
+  initialMutationChanceModMax: 1
   initialMutationMagnitudeModMin: 0.5
   initialMutationMagnitudeModMax: 2
-  initialMaxRepCooldownMin: 5
+  initialMaxRepCooldownMin: 2
   initialMaxRepCooldownMax: 20
-  initialRepEnergyCostMin: 10
-  initialRepEnergyCostMax: 40
-  initialRepRangeMin: 2
-  initialRepRangeMax: 3
-  maxFoodCount: 1000
-  initialFoodCount: 100
-  foodSpawnInterval: 1
-  foodSpawnBatchSize: 5
+  initialRepEnergyCostMin: 0
+  initialRepEnergyCostMax: 56.96143
+  initialMaxEnergyMin: 100
+  initialMaxEnergyMax: 300
+  initialDietPreferenceMin: 0
+  initialDietPreferenceMax: 0.5998671
+  dietEfficiencyThreshold: 0.1
+  maxFoodCount: 5000
+  initialFoodCount: 1275
+  foodSpawnInterval: 5
+  foodSpawnBatchSize: 4
   maxSpawnBatchesPerTick: 20
-  foodEnergyMultiplier: 3
-  poisonEnergyMultiplier: 1000
-  poisonHealthMultiplier: 2
-  poisonTemperatureThreshold: 0.3
+  poisonEnergyMultiplier: 0
+  poisonHealthMultiplier: 3
+  poisonTemperatureThreshold: 0.5
   poisonSpawnChance: 0.5
   foodNutritionMin: 10
   foodNutritionMax: 40
-  foodDespawnMin: 3000
-  foodDespawnMax: 4000
-  foodSizePerNutrition: 0.01
-  poisonSizeMultiplier: 1.3
+  foodDespawnMin: 500
+  foodDespawnMax: 1000
+  foodSizePerNutrition: 0.02
+  poisonSizeMultiplier: 0.01
   foodSpawnChanceCold: 0.1
   foodSpawnChanceWarm: 0.9
+  deathFoodDropCount: 5
+  deathFoodNutritionPerEnergy: 1
+  deathFoodScatter: 2
+  meatDespawnMultiplier: 0.8
+  meatColour: {r: 0.7, g: 0.15, b: 0.1, a: 1}
+  enablePredation: 1
+  initialAttackDamageMin: 0
+  initialAttackDamageMax: 10
+  minAttackDamage: 2
+  maxAttackDamage: 20
+  attackCooldownDuration: 5
+  attackEnergyCostMultiplier: 2
+  attackDashStrength: 0.3
   excessCoefficient: 1
   disjointCoefficient: 1
   weightDiffCoefficient: 0.4
+  attributeDistanceCoefficient: 2
   compatibilityThreshold: 3
+  interSpeciesMatingChance: 0.1
   speciationNormalisationThreshold: 20
   speciesViabilityThreshold: 5
   anagenesisThreshold: 6

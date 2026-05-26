@@ -1,9 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Value type holding all heritable/mutable agent attributes.
-/// Used by crossover, mutation, and agent creation to avoid long parameter lists.
-/// </summary>
+// Value type holding all inheritable/mutable agent attributes.
 public struct AgentAttributes
 {
     public float size;
@@ -15,5 +12,6 @@ public struct AgentAttributes
     public float mutationMagnitudeMod;
     public float maxReproductionCooldown;
     public float reproductionEnergyCost;
-    public float reproductionRange;
+    public float attackDamage;
+    public float dietPreference;     // 0 = herbivore, 1 = carnivore
 }

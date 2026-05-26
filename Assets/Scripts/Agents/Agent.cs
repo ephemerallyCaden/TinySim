@@ -8,19 +8,24 @@ public class Agent : MonoBehaviour
     private const int INPUT_HEALTH = 1;
     private const int INPUT_AGE = 2;
     private const int INPUT_HUNGER = 3;
-    private const int INPUT_SEE_AGENT = 4;
-    private const int INPUT_AGENT_PROXIMITY = 5;
-    private const int INPUT_AGENT_ANGLE = 6;
-    private const int INPUT_AGENT_HEALTH = 7;
-    private const int INPUT_AGENT_ENERGY = 8;
-    private const int INPUT_SEE_FOOD = 9;
-    private const int INPUT_FOOD_PROXIMITY = 10;
-    private const int INPUT_FOOD_ANGLE = 11;
-    private const int INPUT_DESIRE = 12;
-    private const int INPUT_SEE_POISON = 13;
-    private const int INPUT_POISON_PROXIMITY = 14;
-    private const int INPUT_POISON_ANGLE = 15;
-    private const int INPUT_TEMPERATURE = 16;
+    private const int INPUT_TEMPERATURE = 4;
+    private const int INPUT_SEE_AGENT = 5;
+    private const int INPUT_AGENT_PROXIMITY = 6;
+    private const int INPUT_AGENT_ANGLE = 7;
+    private const int INPUT_AGENT_HEALTH = 8;
+    private const int INPUT_AGENT_ENERGY = 9;
+    private const int INPUT_AGENT_SIZE = 10;
+    private const int INPUT_SAME_SPECIES = 11;
+    private const int INPUT_SEE_FOOD = 12;
+    private const int INPUT_FOOD_PROXIMITY = 13;
+    private const int INPUT_FOOD_ANGLE = 14;
+    private const int INPUT_SEE_MEAT = 15;
+    private const int INPUT_MEAT_PROXIMITY = 16;
+    private const int INPUT_MEAT_ANGLE = 17;
+    private const int INPUT_SEE_POISON = 18;
+    private const int INPUT_POISON_PROXIMITY = 19;
+    private const int INPUT_POISON_ANGLE = 20;
+    private const int INPUT_DESIRE = 21;
 
     public int id;
     // Agent Characteristics (can mutate)
@@ -43,6 +48,7 @@ public class Agent : MonoBehaviour
     public int generation;            //Current agent generation
     public float age;                 // Current age (world time - birth time)
     public float health;              // Current health
+    public float maxHealth;           // Maximum health (size * healthPerSize)
     public float maxEnergy;           // Maximum energy capacity
     public float energy;              // Current energy
     public float metabolismCost;      // Energy cost per frame
@@ -63,6 +69,17 @@ public class Agent : MonoBehaviour
     public float turningRate;         // Turning rate
     public float turnRateMax;
     public float desireValue;         // Desire value (used for decision-making)
+    private float attackIntent;       // Attack output (predation)
+
+    // Predation
+    public float attackDamage;
+
+    // Diet
+    public float dietPreference;         // 0 = herbivore, 1 = carnivore
+    private float attackCooldown;
+
+    // Attack visuals
+    public float damageFlashTimer;
 
     // Environment Sensors
     public LayerMask agentLayer = 8;   // Sorting layer for agents
@@ -72,12 +89,15 @@ public class Agent : MonoBehaviour
     private Agent closestAgent;
     private Food closestFood;
     private Food closestPoison;
+    private Food closestMeat;
     float closestAgentDistance;
     float closestAgentAngle;
     float closestFoodDistance;
     float closestFoodAngle;
     float closestPoisonDistance;
     float closestPoisonAngle;
+    float closestMeatDistance;
+    float closestMeatAngle;
     private Collider2D[] hitList = new Collider2D[20];
     private CircleCollider2D col;
 
@@ -87,10 +107,12 @@ public class Agent : MonoBehaviour
     public float reproductionCooldown;      // Time required between reproductions
     public float reproductionEnergyCost;    // Energy required to reproduce
     public float maxReproductionCooldown;   // Reproduction cooldown max initially
-    public float reproductionRange;         // Max distance to mate with another agent
-    public float reproductionCooldownJitter = 5f;      //Reproduction cooldown modifier
+    public float reproductionCooldownJitter;      //Reproduction cooldown modifier
     public int offspringCount = 0;          //No. of offspring agent has
-    public float eatingRadius;              //Size of radius around the agent that it can eat from
+    public float interactionRadius;         // Base radius derived from size
+    public float eatingRadius;              // Radius for consuming food (defaults to interactionRadius)
+    public float reproductionRange;         // Radius for mating (defaults to interactionRadius)
+    public float attackRange;               // Radius for attacking (defaults to interactionRadius)
     private void Start()
     {
 
@@ -103,11 +125,15 @@ public class Agent : MonoBehaviour
         movementCost = cfg.movementCostFactor * size;
 
         reproductionCooldown = maxReproductionCooldown;
+        reproductionCooldownJitter = cfg.reproductionCooldownJitter;
 
         //Collision variable calculation
         col = GetComponent<CircleCollider2D>();
         col.radius = size * cfg.collisionRadiusScale;
-        eatingRadius = size + cfg.eatingRadiusPadding;
+        interactionRadius = size;
+        eatingRadius = cfg.eatingRadius < 0 ? interactionRadius : interactionRadius + cfg.eatingRadius;
+        reproductionRange = cfg.reproductionRange < 0 ? interactionRadius : interactionRadius + cfg.reproductionRange;
+        attackRange = cfg.attackRange < 0 ? interactionRadius : interactionRadius + cfg.attackRange;
 
         // Register in component cache for fast vision lookups
         AgentComponentCache.RegisterAgent(col, this);
@@ -154,6 +180,9 @@ public class Agent : MonoBehaviour
     {
         _cfg = SimulationManager.instance.config;
 
+        // Decay attack visuals
+        if (damageFlashTimer > 0f) damageFlashTimer -= deltaTime;
+
         // Update vision
         UpdateVision();
 
@@ -173,13 +202,19 @@ public class Agent : MonoBehaviour
         ExecuteOutputs(deltaTime);
 
         Eat();
+        Attack(deltaTime);
     }
 
-    public void UpdateReproduction(float deltaTime)
+    public void UpdateReproduction(float deltaTime, bool canReproduce)
     {
-        //Reproduction
-        reproductionCooldown -= deltaTime;
-        if (reproductionCooldown <= 0)
+        if (reproductionCooldown > 0)
+        {
+            reproductionCooldown -= deltaTime;
+            if (reproductionCooldown < 0)
+                reproductionCooldown = 0;
+        }
+
+        if (canReproduce && reproductionCooldown <= 0)
         {
             AttemptReproduction();
         }
@@ -223,6 +258,7 @@ public class Agent : MonoBehaviour
         closestAgent = null;
         closestFood = null;
         closestPoison = null;
+        closestMeat = null;
 
         closestAgentDistance = float.MaxValue;
         closestAgentAngle = 0;
@@ -230,8 +266,10 @@ public class Agent : MonoBehaviour
         closestFoodAngle = 0;
         closestPoisonDistance = float.MaxValue;
         closestPoisonAngle = 0;
+        closestMeatDistance = float.MaxValue;
+        closestMeatAngle = 0;
 
-        // Compute the agent's actual facing direction from its rotation angle
+        // Compute the agent's facing direction from its rotation angle
         float radians = rotation * Mathf.Deg2Rad;
         Vector2 facingDirection = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
 
@@ -268,17 +306,23 @@ public class Agent : MonoBehaviour
                     closestAgentAngle = signedAngle;
                 }
 
-                // Detect food (separate tracking for normal food vs poison)
+                // Detect food (separate tracking for plant, meat, poison)
                 Food currentFood = AgentComponentCache.GetFood(hit);
                 if (currentFood != null)
                 {
-                    if (currentFood.isPoison && distanceToTarget < closestPoisonDistance)
+                    if (currentFood is PoisonFood && distanceToTarget < closestPoisonDistance)
                     {
                         closestPoison = currentFood;
                         closestPoisonDistance = distanceToTarget;
                         closestPoisonAngle = signedAngle;
                     }
-                    else if (!currentFood.isPoison && distanceToTarget < closestFoodDistance)
+                    else if (currentFood is MeatFood && distanceToTarget < closestMeatDistance)
+                    {
+                        closestMeat = currentFood;
+                        closestMeatDistance = distanceToTarget;
+                        closestMeatAngle = signedAngle;
+                    }
+                    else if (distanceToTarget < closestFoodDistance)
                     {
                         closestFood = currentFood;
                         closestFoodDistance = distanceToTarget;
@@ -296,7 +340,7 @@ public class Agent : MonoBehaviour
         SimulationConfig cfg = _cfg;
 
         // Update base inputs (normalised)
-        inputs[INPUT_HEALTH] = health / cfg.offspringHealthBase;
+        inputs[INPUT_HEALTH] = health / maxHealth;
         inputs[INPUT_AGE] = Mathf.Clamp01(age / cfg.ageSaturationCap);
         inputs[INPUT_HUNGER] = (maxEnergy - energy) / maxEnergy;
         inputs[INPUT_SEE_AGENT] = closestAgent != null ? 1 : 0;
@@ -312,20 +356,27 @@ public class Agent : MonoBehaviour
         inputs[INPUT_AGENT_ANGLE] = 0;
         inputs[INPUT_AGENT_HEALTH] = 0;
         inputs[INPUT_AGENT_ENERGY] = 0;
+        inputs[INPUT_AGENT_SIZE] = 0;
         inputs[INPUT_SEE_FOOD] = 0;
         inputs[INPUT_FOOD_PROXIMITY] = 0;
         inputs[INPUT_FOOD_ANGLE] = 0;
         inputs[INPUT_SEE_POISON] = 0;
         inputs[INPUT_POISON_PROXIMITY] = 0;
         inputs[INPUT_POISON_ANGLE] = 0;
+        inputs[INPUT_SEE_MEAT] = 0;
+        inputs[INPUT_MEAT_PROXIMITY] = 0;
+        inputs[INPUT_MEAT_ANGLE] = 0;
+        inputs[INPUT_SAME_SPECIES] = 0;
 
         // Closest creature
         if (closestAgent != null)
         {
             inputs[INPUT_AGENT_PROXIMITY] = 1.0 - (closestAgentDistance / visionDistance);
             inputs[INPUT_AGENT_ANGLE] = closestAgentAngle / visionAngle;
-            inputs[INPUT_AGENT_HEALTH] = closestAgent.health / cfg.offspringHealthBase;
-            inputs[INPUT_AGENT_ENERGY] = closestAgent.energy / closestAgent.maxEnergy;
+            inputs[INPUT_AGENT_HEALTH] = closestAgent.health / health;
+            inputs[INPUT_AGENT_ENERGY] = closestAgent.energy / energy;
+            inputs[INPUT_AGENT_SIZE] = closestAgent.size / size; // Relative size: >1 means bigger than self
+            inputs[INPUT_SAME_SPECIES] = (speciesId == closestAgent.speciesId) ? 1 : 0;
         }
 
         // Closest food
@@ -343,6 +394,14 @@ public class Agent : MonoBehaviour
             inputs[INPUT_POISON_PROXIMITY] = 1.0 - (closestPoisonDistance / visionDistance);
             inputs[INPUT_POISON_ANGLE] = closestPoisonAngle / visionAngle;
         }
+
+        // Closest meat
+        if (closestMeat != null)
+        {
+            inputs[INPUT_SEE_MEAT] = 1;
+            inputs[INPUT_MEAT_PROXIMITY] = 1.0 - (closestMeatDistance / visionDistance);
+            inputs[INPUT_MEAT_ANGLE] = closestMeatAngle / visionAngle;
+        }
     }
 
     // Process inputs through the neural network
@@ -356,6 +415,10 @@ public class Agent : MonoBehaviour
         movementSpeed = (float)outputs[0]; // Movement speed (-1 to 1)
         turningRate = (float)outputs[1];   // Turning rate (-1 to 1)
         desireValue = (float)outputs[2];   // Desire value
+
+        // Attack intent (only exists when predation is enabled)
+        if (outputs.Length > 3)
+            attackIntent = (float)outputs[3];
 
     }
 
@@ -392,10 +455,6 @@ public class Agent : MonoBehaviour
         if (closestAgent == null || closestAgentDistance > reproductionRange) return;
         if (!isFertile() || !closestAgent.isFertile()) return;
 
-        // Prefer same-species mating. Inter-species mating has only 10% chance.
-        bool sameSpecies = (speciesId == closestAgent.speciesId);
-        if (!sameSpecies && SimRandom.NextFloat() > 0.1f) return;
-
         // Random agent is parent1, as there is no fitness in RT-NEAT
         Agent parent1 = SimRandom.NextFloat() > 0.5f ? this : closestAgent;
         Agent parent2 = parent1 == this ? closestAgent : this;
@@ -429,35 +488,78 @@ public class Agent : MonoBehaviour
     private void Die()
     {
         AgentComponentCache.UnregisterAgent(col);
+        FoodSpawner.instance.DropDeathFood(position, energy);
         SimEvents.AgentDied(this);
         Destroy(gameObject);
     }
 
+    private Collider2D[] eatHitList = new Collider2D[10];
+
     private void Eat()
     {
-        // Eat normal food
-        if (closestFood != null)
-        {
-            if (closestFoodDistance <= eatingRadius)
-            {
-                energy = Mathf.Min(energy + closestFood.nutritionValue * _cfg.foodEnergyMultiplier, maxEnergy);
-                closestFood.gameObject.SetActive(false);
-                SimEvents.FoodConsumed(closestFood);
-                Destroy(closestFood.gameObject);
-            }
-        }
+        float plantEfficiency = 1f - dietPreference;
+        float meatEfficiency = dietPreference;
+        float threshold = _cfg.dietEfficiencyThreshold;
 
-        // Eat poison (still auto-eat if within radius — agents must learn to avoid)
-        if (closestPoison != null)
+        int hitCount = Physics2D.OverlapCircleNonAlloc(position, eatingRadius, eatHitList, foodLayer);
+        for (int i = 0; i < hitCount; i++)
         {
-            if (closestPoisonDistance <= eatingRadius)
+            Food food = AgentComponentCache.GetFood(eatHitList[i]);
+            if (food == null) continue;
+
+            if (food is PoisonFood)
             {
-                energy -= closestPoison.nutritionValue * _cfg.poisonEnergyMultiplier;
-                health -= closestPoison.nutritionValue * _cfg.poisonHealthMultiplier;
-                closestPoison.gameObject.SetActive(false);
-                SimEvents.FoodConsumed(closestPoison);
-                Destroy(closestPoison.gameObject);
+                ConsumeFood(food);
+                energy -= food.nutritionValue * _cfg.poisonEnergyMultiplier;
+                health -= food.nutritionValue * _cfg.poisonHealthMultiplier;
+                return;
             }
+
+            float efficiency = food is MeatFood ? meatEfficiency : plantEfficiency;
+            if (efficiency < threshold) continue;
+
+            ConsumeFood(food);
+            energy = Mathf.Min(energy + food.nutritionValue * efficiency, maxEnergy);
+            return;
         }
+    }
+
+    private void ConsumeFood(Food food)
+    {
+        food.gameObject.SetActive(false);
+        SimEvents.FoodConsumed(food);
+        Destroy(food.gameObject);
+    }
+
+    private void Attack(float deltaTime)
+    {
+        if (!_cfg.enablePredation) return;
+        if (attackDamage <= 0f) return;
+
+        attackCooldown -= deltaTime;
+        if (attackCooldown > 0f) return;
+
+        // Only attack if NN output is above threshold
+        if (attackIntent <= 0f) return;
+
+        if (closestAgent == null) return;
+        if (closestAgentDistance > attackRange) return;
+
+        // Deal damage scaled by intent strength
+        float damage = attackDamage * attackIntent;
+        closestAgent.health -= damage;
+
+        energy -= _cfg.attackEnergyCostMultiplier * damage;
+
+        // Victim flashes red
+        closestAgent.damageFlashTimer = _cfg.damageFlashDuration;
+
+        // Attacker lunges toward prey (instant small offset)
+        Vector3 dirToPrey = (closestAgent.position - position).normalized;
+        float lungeDistance = Mathf.Min(_cfg.attackDashStrength, closestAgentDistance * 0.5f);
+        position += dirToPrey * lungeDistance;
+        transform.position = position;
+
+        attackCooldown = _cfg.attackCooldownDuration;
     }
 }

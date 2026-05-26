@@ -52,11 +52,7 @@ public class AgentManager : MonoBehaviour
 
             _agents[i].UpdateAgent(deltaTime);
             generationSum += _agents[i].generation;
-
-            if (canReproduce)
-            {
-                _agents[i].UpdateReproduction(deltaTime);
-            }
+            _agents[i].UpdateReproduction(deltaTime, canReproduce);
         }
 
         //Calculate the average generation number of all agents
@@ -80,7 +76,6 @@ public class AgentManager : MonoBehaviour
         int generation,
         Vector3 position,
         AgentAttributes attrs,
-        float health,
         float energy,
         float maxEnergy,
         Genome genome,
@@ -100,14 +95,20 @@ public class AgentManager : MonoBehaviour
         agent.visionAngle = attrs.visionAngle;
         agent.mutationChanceMod = attrs.mutationChanceMod;
         agent.mutationMagnitudeMod = attrs.mutationMagnitudeMod;
-        agent.health = health;
+        agent.maxHealth = attrs.size * SimulationManager.instance.config.healthPerSize;
+        agent.health = agent.maxHealth;
         agent.maxEnergy = maxEnergy;
         agent.energy = energy;
 
         // Reproductive attributes
         agent.maxReproductionCooldown = attrs.maxReproductionCooldown;
         agent.reproductionEnergyCost = attrs.reproductionEnergyCost;
-        agent.reproductionRange = attrs.reproductionRange;
+
+        // Predation
+        agent.attackDamage = attrs.attackDamage;
+
+        // Diet
+        agent.dietPreference = attrs.dietPreference;
 
         // Assign genome and neural network
         agent.genome = genome;

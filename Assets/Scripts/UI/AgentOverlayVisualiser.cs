@@ -1,16 +1,17 @@
 using UnityEngine;
 
-/// <summary>
-/// Draws vision cone and reproduction range overlays for the selected agent.
-/// Attach to the same GameObject as AgentSelect.
-/// </summary>
+// Draws vision cone and reproduction range overlays for the selected agent.
 public class AgentOverlayVisualiser : MonoBehaviour
 {
     [Header("Visual Settings")]
     public Color visionConeColour = new Color(0.2f, 0.8f, 1f, 0.15f);
     public Color visionOutlineColour = new Color(0.2f, 0.8f, 1f, 0.6f);
-    public Color reproductionRangeColour = new Color(1f, 0.4f, 0.7f, 0.1f);
-    public Color reproductionOutlineColour = new Color(1f, 0.4f, 0.7f, 0.5f);
+    public Color eatingRangeColour = new Color(0.2f, 0.8f, 0.2f, 0.08f);
+    public Color eatingOutlineColour = new Color(0.2f, 0.8f, 0.2f, 0.4f);
+    public Color reproductionRangeColour = new Color(1f, 0.4f, 0.7f, 0.08f);
+    public Color reproductionOutlineColour = new Color(1f, 0.4f, 0.7f, 0.4f);
+    public Color attackRangeColour = new Color(1f, 0.6f, 0.0f, 0.08f);
+    public Color attackOutlineColour = new Color(1f, 0.6f, 0.0f, 0.4f);
 
     [Header("Rendering")]
     public int coneSegments = 30;
@@ -30,17 +31,6 @@ public class AgentOverlayVisualiser : MonoBehaviour
         analyticsPanel = FindObjectOfType<AnalyticsPanel>();
         visionMesh = new Mesh();
         reproductionMesh = new Mesh();
-
-        // Create a transparent material if none is assigned
-        if (overlayMaterial == null)
-        {
-            overlayMaterial = new Material(Shader.Find("Hidden/Internal-Colored"));
-            overlayMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            overlayMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            overlayMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            overlayMaterial.SetInt("_ZWrite", 0);
-            overlayMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-        }
     }
 
     private void Update()
@@ -53,12 +43,13 @@ public class AgentOverlayVisualiser : MonoBehaviour
         float facing = agent.rotation;
         float halfAngle = agent.visionAngle;
         float visionRadius = agent.visionDistance;
-        float reproRadius = agent.reproductionRange;
-
         visionLabelWorldPos = pos + new Vector3(
             visionRadius * 0.6f * Mathf.Cos((facing + halfAngle * 0.5f) * Mathf.Deg2Rad),
             visionRadius * 0.6f * Mathf.Sin((facing + halfAngle * 0.5f) * Mathf.Deg2Rad), 0);
-        reproductionLabelWorldPos = pos + new Vector3(reproRadius * 0.7f, reproRadius * 0.7f, 0);
+
+        eatingLabelWorldPos = pos + new Vector3(agent.eatingRadius * 0.7f, 0, 0);
+        reproductionLabelWorldPos = pos + new Vector3(0, agent.reproductionRange * 0.7f, 0);
+        attackLabelWorldPos = pos + new Vector3(-agent.attackRange * 0.7f, 0, 0);
     }
 
     private void DrawVisionCone(Agent agent)
@@ -72,11 +63,12 @@ public class AgentOverlayVisualiser : MonoBehaviour
         DrawArc(pos, facing, halfAngle, radius, visionOutlineColour);
     }
 
-    private void DrawReproductionRange(Agent agent)
+    private void DrawRangeCircles(Agent agent)
     {
-        float radius = agent.reproductionRange;
         Vector3 pos = agent.transform.position;
-        DrawCircle(pos, radius, reproductionRangeColour, reproductionOutlineColour);
+        DrawCircle(pos, agent.eatingRadius, eatingRangeColour, eatingOutlineColour);
+        DrawCircle(pos, agent.reproductionRange, reproductionRangeColour, reproductionOutlineColour);
+        DrawCircle(pos, agent.attackRange, attackRangeColour, attackOutlineColour);
     }
 
     private void DrawCone(Vector3 centre, float facingDeg, float halfAngleDeg, float radius, Color colour)
@@ -166,7 +158,9 @@ public class AgentOverlayVisualiser : MonoBehaviour
     }
 
     private Vector3 visionLabelWorldPos;
+    private Vector3 eatingLabelWorldPos;
     private Vector3 reproductionLabelWorldPos;
+    private Vector3 attackLabelWorldPos;
 
     private void OnGUI()
     {
@@ -186,12 +180,28 @@ public class AgentOverlayVisualiser : MonoBehaviour
             GUI.Label(new Rect(screenPos.x, Screen.height - screenPos.y, 100, 20), "Vision");
         }
 
+        // Eating label
+        screenPos = cam.WorldToScreenPoint(eatingLabelWorldPos);
+        if (screenPos.z > 0)
+        {
+            GUI.color = eatingOutlineColour;
+            GUI.Label(new Rect(screenPos.x, Screen.height - screenPos.y, 100, 20), "Eating");
+        }
+
         // Reproduction label
         screenPos = cam.WorldToScreenPoint(reproductionLabelWorldPos);
         if (screenPos.z > 0)
         {
             GUI.color = reproductionOutlineColour;
             GUI.Label(new Rect(screenPos.x, Screen.height - screenPos.y, 120, 20), "Reproduction");
+        }
+
+        // Attack label
+        screenPos = cam.WorldToScreenPoint(attackLabelWorldPos);
+        if (screenPos.z > 0)
+        {
+            GUI.color = attackOutlineColour;
+            GUI.Label(new Rect(screenPos.x, Screen.height - screenPos.y, 100, 20), "Attack");
         }
     }
 
@@ -210,7 +220,7 @@ public class AgentOverlayVisualiser : MonoBehaviour
         GL.LoadProjectionMatrix(cam.projectionMatrix);
         GL.modelview = cam.worldToCameraMatrix;
 
-        DrawReproductionRange(agent);
+        DrawRangeCircles(agent);
         DrawVisionCone(agent);
 
         GL.PopMatrix();

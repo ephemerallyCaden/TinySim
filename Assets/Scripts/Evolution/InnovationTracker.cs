@@ -6,10 +6,7 @@ public static class InnovationTracker
     private static int nextLinkId = 0;
     private static Dictionary<(int, int), int> linkIds = new Dictionary<(int, int), int>();
 
-    /// <summary>
-    /// Initialise the tracker with the correct starting node ID.
-    /// Must be called before any agents are created.
-    /// </summary>
+    // Initialise the tracker with the correct starting node ID, called before agent initialisation.
     public static void Initialise(int inputCount, int outputCount)
     {
         nextNodeId = inputCount + outputCount;
@@ -17,7 +14,7 @@ public static class InnovationTracker
         linkIds.Clear();
     }
 
-    //Fetches an existing linkid, or creates a new one if the connection is unique
+    // Fetches an existing linkid, or creates a new one if the connection is unique
     public static int GetInnovation(int source, int target)
     {
         if (!linkIds.TryGetValue((source, target), out int linkId))

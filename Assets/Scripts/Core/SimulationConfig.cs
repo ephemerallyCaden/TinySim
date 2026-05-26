@@ -1,32 +1,31 @@
 using UnityEngine;
 
-/// <summary>
-/// Central configuration for all simulation parameters.
-/// Create an instance via Assets > Create > TinySim > Simulation Config.
-/// Set any clamp value to -1 to disable that limit.
-/// </summary>
+// Central config for all parameters in the simulation
 [CreateAssetMenu(fileName = "SimulationConfig", menuName = "TinySim/Simulation Config")]
 public class SimulationConfig : ScriptableObject
 {
-    /// <summary>
-    /// Clamps a value using config min/max. A value of -1 means "no limit" for that bound.
-    /// </summary>
-    public static float Clamp(float value, float min, float max)
-    {
-        float effectiveMin = (min == -1f) ? float.MinValue : min;
-        float effectiveMax = (max == -1f) ? float.MaxValue : max;
-        return Mathf.Clamp(value, effectiveMin, effectiveMax);
-    }
-
     [Header("World")]
     public int worldSize = 128;
     public int seed = -1;
+
+    [Header("Temperature")]
+    public float temperatureScale = 3f;       // Perlin noise scale (lower = smoother, larger biomes)
+    public float coldSkewPower = 1.5f;        // Power applied to raw noise (higher = more cold area)
+
+    [Header("Spawn")]
+    public int spawnPattern = 1;              // 0=Central, 1=Clusters, 2=Random
+    public bool uniformStart = false;         // All agents start identical
+    public int numberOfClusters = 5;          // Cluster spawn pattern: number of cluster centers
 
     [Header("Population")]
     public int maxPopulation = 200;
     public int initialAgentCount = 50;
 
-    [Header("Metabolism")]
+    [Header("Agent Output Limits")]
+    public float maxAgentSpeed = 10f;
+    public float maxTurnRate = 10f;
+
+    [Header("Metabolism & Energy")]
     public float metabolismSpeedFactor = 0.02f;
     public float metabolismSizeFactor = 0.05f;   // Applied as sizeFactor * size²
     public float metabolismBrainFactor = 0.005f;
@@ -34,30 +33,31 @@ public class SimulationConfig : ScriptableObject
     public float metabolismTurnFactor = 0.03f;
     public float movementDampening = 0.5f;
     public float turnRateScale = 10f;
+    public float maxEnergyPerSize = 200f;
 
     [Header("Health & Aging")]
+    public float healthPerSize = 50f;            // Max health = size * healthPerSize
     public float agingOnsetAge = 2000f;
-    public float agingRateMultiplier = 0.002f;
+    public float agingRateMultiplier = 0.0005f;
     public float starvationHealthDrainRate = 10f;
     public float ageSaturationCap = 500f;
-    public float collisionRadiusScale = 1.5f;
-    public float eatingRadiusPadding = 0.2f;
 
-    [Header("Agent Output Limits")]
-    public float maxAgentSpeed = 10f;
-    public float maxTurnRate = 10f;
+    [Header("Interaction Radii")]
+    public float collisionRadiusScale = 1.5f;
+    public float eatingRadius = -1f;       // -1 = use interactionRadius
+    public float reproductionRange = -1f;  // -1 = use interactionRadius
+    public float attackRange = -1f;        // -1 = use interactionRadius
 
     [Header("Reproduction")]
-    public float reproductionRange = 8.0f;
-    public float offspringHealthBase = 100f;
     public float offspringEnergyMultiplier = 2.5f;
-    public float maxEnergyPerSize = 200f;
     public float parentReproductionEnergyCost = 10f;
     public float reproductionCostScaling = 0.1f; // Per-offspring cost increase
+    public float reproductionCooldownJitter = 5f; // +/- random time added to cooldown after mating
 
     [Header("Mutation")]
     public float globalMutationChance = 0.1f;
     public float globalMutationMagnitude = 0.4f;
+    public float disableVsPruneChance = 0.5f; // Probability of disabling a connection vs pruning a hidden node
 
     [Header("Mutation Type Thresholds")]
     [Tooltip("0-50%: weight mutation or add connection")]
@@ -89,10 +89,23 @@ public class SimulationConfig : ScriptableObject
     public float maxReproductionCooldown = 400f;
     public float minReproductionEnergyCost = 20f;
     public float maxReproductionEnergyCost = 100f;
-    public float minReproductionRange = 1f;
-    public float maxReproductionRange = 50f;
+    public float minAttackDamage = 0f;
+    public float maxAttackDamage = 20f;
 
-    [Header("Initial Agent Ranges (Random Start)")]
+    [Header("Uniform Start Base Values")]
+    public float baseSize = 1.0f;
+    public float baseSpeed = 2.0f;
+    public float baseVisionDistance = 10f;
+    public float baseVisionAngle = 90f;
+    public float baseMaxEnergy = 200f;
+    public float baseMutationChanceMod = 1f;
+    public float baseMutationMagnitudeMod = 1f;
+    public float baseMaxReproductionCooldown = 10f;
+    public float baseReproductionEnergyCost = 20f;
+    public float baseDietPreference = 0.5f;
+    public float baseAttackDamage = 0f;
+
+    [Header("Initial Agent Ranges")]
     public float initialSizeMin = 0.5f;
     public float initialSizeMax = 2.0f;
     public float initialSpeedMin = 1.0f;
@@ -109,8 +122,15 @@ public class SimulationConfig : ScriptableObject
     public float initialMaxRepCooldownMax = 20f;
     public float initialRepEnergyCostMin = 10f;
     public float initialRepEnergyCostMax = 40f;
-    public float initialRepRangeMin = 10f;
-    public float initialRepRangeMax = 30f;
+    public float initialMaxEnergyMin = 100f;
+    public float initialMaxEnergyMax = 300f;
+    public float initialDietPreferenceMin = 0.0f;
+    public float initialDietPreferenceMax = 1.0f;
+    public float initialAttackDamageMin = 0f;
+    public float initialAttackDamageMax = 5f;
+
+    [Header("Diet")]
+    public float dietEfficiencyThreshold = 0.2f; // Won't eat food type if efficiency is below this
 
     [Header("Food")]
     public int maxFoodCount = 500;
@@ -118,25 +138,43 @@ public class SimulationConfig : ScriptableObject
     public float foodSpawnInterval = 1f;
     public int foodSpawnBatchSize = 5;
     public int maxSpawnBatchesPerTick = 20;
-    public float foodEnergyMultiplier = 3f;
+    public float foodNutritionMin = 10f;
+    public float foodNutritionMax = 40f;
+    public float coldNutritionMultiplier = 0.5f; // Nutrition floor multiplier in coldest biomes
+    public float foodDespawnMin = 800f;
+    public float foodDespawnMax = 1200f;
+    public float foodSizePerNutrition = 0.0017f;
+    public float foodSpawnChanceCold = 0.1f;
+    public float foodSpawnChanceWarm = 0.9f;
+
+    [Header("Poison")]
     public float poisonEnergyMultiplier = 4f;
     public float poisonHealthMultiplier = 2f;
     public float poisonTemperatureThreshold = 0.3f;
     public float poisonSpawnChance = 0.5f;
-    public float foodNutritionMin = 10f;
-    public float foodNutritionMax = 40f;
-    public float foodDespawnMin = 800f;
-    public float foodDespawnMax = 1200f;
-    public float foodSizePerNutrition = 0.01f;
     public float poisonSizeMultiplier = 1.3f;
-    public float foodSpawnChanceCold = 0.1f;
-    public float foodSpawnChanceWarm = 0.9f;
+
+    [Header("Death / Meat")]
+    public int deathFoodDropCount = 1;           // Number of meat items dropped on death
+    public float deathFoodNutritionPerEnergy = 5f;
+    public float deathFoodScatter = 1.5f;        // Scatter radius for dropped meat
+    public float meatDespawnMultiplier = 0.4f;   // Meat decays faster (multiplied against normal despawn)
+    public Color meatColour = new Color(0.7f, 0.15f, 0.1f, 1f); // Dark red
+
+    [Header("Predation")]
+    public bool enablePredation = false;
+    public float attackCooldownDuration = 1.0f;
+    public float attackEnergyCostMultiplier = 5f;
+    public float attackDashStrength = 0.3f; // Lunge distance toward prey on attack
+    public float damageFlashDuration = 0.15f; // Seconds of red flash when hit
 
     [Header("Speciation")]
     public float excessCoefficient = 1.0f;
     public float disjointCoefficient = 1.0f;
     public float weightDiffCoefficient = 0.4f;
+    public float attributeDistanceCoefficient = 2.0f; // Weight for physical trait differences in speciation
     public float compatibilityThreshold = 3.0f;
+    public float interSpeciesMatingChance = 0.1f;   // Chance of mating with a different species
     public int speciationNormalisationThreshold = 20;
     public int speciesViabilityThreshold = 5;
     public float anagenesisThreshold = 6.0f;

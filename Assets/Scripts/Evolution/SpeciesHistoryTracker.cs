@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Records species lifecycle data over time for the phylogenetic diagram.
-/// </summary>
+/// Records species lifecycle data over time
 public class SpeciesHistoryTracker : MonoBehaviour
 {
     public static SpeciesHistoryTracker instance;
@@ -73,13 +71,35 @@ public class SpeciesHistoryTracker : MonoBehaviour
                 }
             }
 
-            // Get the actual species name from SpeciationManager (includes lineage)
+            // Get the actual species name and founding data from SpeciationManager
             string name = null;
+            Genome foundingGenome = null;
+            AgentAttributes foundingAttributes = default;
             if (SpeciationManager.instance != null)
             {
                 foreach (var s in SpeciationManager.instance.species)
                 {
-                    if (s.id == speciesId) { name = s.speciesName; break; }
+                    if (s.id == speciesId)
+                    {
+                        name = s.speciesName;
+                        foundingGenome = s.foundingGenome;
+                        if (s.representative != null)
+                        {
+                            Agent rep = s.representative;
+                            foundingAttributes.size = rep.size;
+                            foundingAttributes.speed = rep.speed;
+                            foundingAttributes.colour = rep.colour;
+                            foundingAttributes.visionDistance = rep.visionDistance;
+                            foundingAttributes.visionAngle = rep.visionAngle;
+                            foundingAttributes.mutationChanceMod = rep.mutationChanceMod;
+                            foundingAttributes.mutationMagnitudeMod = rep.mutationMagnitudeMod;
+                            foundingAttributes.maxReproductionCooldown = rep.maxReproductionCooldown;
+                            foundingAttributes.reproductionEnergyCost = rep.reproductionEnergyCost;
+                            foundingAttributes.attackDamage = rep.attackDamage;
+                            foundingAttributes.dietPreference = rep.dietPreference;
+                        }
+                        break;
+                    }
                 }
             }
             if (name == null) name = SpeciesNamer.GenerateName(speciesId);
@@ -94,7 +114,9 @@ public class SpeciesHistoryTracker : MonoBehaviour
                 extinctionTime = -1f,
                 extinctionSampleIndex = -1,
                 memberCountHistory = new List<int>(),
-                colour = GetFounderColour(speciesId)
+                colour = GetFounderColour(speciesId),
+                foundingGenome = foundingGenome,
+                foundingAttributes = foundingAttributes
             };
             entries[speciesId] = entry;
         }
@@ -184,6 +206,8 @@ public class SpeciesHistoryTracker : MonoBehaviour
             }
 
             entry.memberCountHistory.Add(count);
+            if (count > entry.peakPopulation)
+                entry.peakPopulation = count;
         }
     }
 
@@ -222,4 +246,7 @@ public class SpeciesHistoryEntry
     public int extinctionSampleIndex;  // -1 if still alive
     public List<int> memberCountHistory;
     public Color colour;
+    public Genome foundingGenome;
+    public AgentAttributes foundingAttributes;
+    public int peakPopulation;
 }

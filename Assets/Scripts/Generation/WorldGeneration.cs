@@ -3,30 +3,20 @@ using UnityEngine.Tilemaps;
 
 public class WorldGeneration : MonoBehaviour
 {
-    [Header("Agent Initialisation")]
+    [Header("References")]
     public AgentInitialiser agentInitialiser;
-    public int initialAgentPopulation = 80;
-    public AgentInitialiser.SpawnPattern spawnPattern = AgentInitialiser.SpawnPattern.Clusters;
-    public bool uniformStart = false; // All agents start identical — evolution from a single ancestor
-
-    [Header("World Settings")]
-    public int worldSize;
-    public Vector3 worldCenter;
-
-    [Header("Temperature Map Settings")]
-    public TemperatureMap temperatureMap; // Reference to the TemperatureMap script
-    public float temperatureScale = 3f; // Scale for temperature map generation (lower = smoother)
+    public TemperatureMap temperatureMap;
+    public TerrainGenerator terrainGenerator;
 
     [Header("Terrain Settings")]
-    public TerrainGenerator terrainGenerator; // Reference to the TerrainGenerator script
-    public float terrainScale = 20f; // Scale for terrain generation
-    public Vector2 terrainOffset = Vector2.zero; // Offset for terrain generation
+    public float terrainScale = 20f;
+    public Vector2 terrainOffset = Vector2.zero;
+
+    private int worldSize;
+    private Vector3 worldCenter;
 
     private void Start()
     {
-        // Initialise the world
-        if (worldSize == 0) worldSize = 64;
-        worldCenter = new Vector3(worldSize / 2, worldSize / 2, 0);
         InitialiseWorld();
     }
 
@@ -34,8 +24,9 @@ public class WorldGeneration : MonoBehaviour
     {
         SimulationConfig cfg = SimulationManager.instance.config;
 
-        // World size comes from SimulationConfig
+        // World size from config
         worldSize = cfg.worldSize;
+        worldCenter = new Vector3(worldSize / 2f, worldSize / 2f, 0);
 
         // Wire config values to runtime components
         AgentManager.instance.maxPopulation = cfg.maxPopulation;
@@ -43,20 +34,21 @@ public class WorldGeneration : MonoBehaviour
         FoodSpawner.instance.initialFoodCount = cfg.initialFoodCount;
         FoodSpawner.instance.maxSpawnTime = cfg.foodSpawnInterval;
 
-        // Generate Temperature Map (also creates the visual background)
-        temperatureMap.GenerateTemperatureMap(worldSize, worldSize, temperatureScale);
+        // Generate Temperature Map (reads scale + skew from config)
+        temperatureMap.GenerateTemperatureMap(worldSize, worldSize, cfg.temperatureScale, cfg.coldSkewPower);
 
-        // Configure the agent initializer
+        // Configure the agent initializer (reads spawn settings from config)
         agentInitialiser.initialAgentCount = cfg.initialAgentCount;
-        agentInitialiser.spawnPattern = spawnPattern;
-        agentInitialiser.uniformStart = uniformStart;
-        agentInitialiser.spawnRadius = worldSize / 2;
+        agentInitialiser.spawnPattern = (AgentInitialiser.SpawnPattern)cfg.spawnPattern;
+        agentInitialiser.uniformStart = cfg.uniformStart;
+        agentInitialiser.spawnRadius = worldSize / 2f;
         agentInitialiser.spawnCenter = worldCenter;
+        agentInitialiser.numberOfClusters = cfg.numberOfClusters;
 
         // Initialise agents
         agentInitialiser.InitialiseAgents();
 
-        //Spawn the first food
+        // Spawn the first food
         FoodSpawner.instance.SpawnInitialFood();
     }
 }

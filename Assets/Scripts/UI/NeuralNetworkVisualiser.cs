@@ -78,7 +78,26 @@ public class NeuralNetworkVisualiser : MonoBehaviour
         GameObject nodeObj = Instantiate(nodePrefab, canvasParent);
         RectTransform rectTransform = nodeObj.GetComponent<RectTransform>();
         rectTransform.anchoredPosition = position;
-        nodeObj.GetComponentInChildren<TMP_Text>().text = node.id.ToString();
+
+        // Use descriptive label from NeuralNetworkLabels if available
+        string label = NeuralNetworkLabels.GetLabel(node.id);
+        TMP_Text text = nodeObj.GetComponentInChildren<TMP_Text>();
+        text.text = label ?? node.id.ToString();
+        text.overflowMode = TextOverflowModes.Overflow;
+
+        // Output nodes: text to the right. Input/hidden nodes: text to the left.
+        RectTransform textRect = text.GetComponent<RectTransform>();
+        if (node.type == NodeType.Output)
+        {
+            textRect.anchoredPosition = new Vector2(80f, 0f);
+            text.alignment = TextAlignmentOptions.MidlineLeft;
+        }
+        else
+        {
+            textRect.anchoredPosition = new Vector2(-80f, 0f);
+            text.alignment = TextAlignmentOptions.MidlineRight;
+        }
+
         instantiatedObjects.Add(nodeObj);
         return nodeObj;
     }

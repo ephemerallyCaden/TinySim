@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// NEAT-style speciation. Groups agents into species based on genome compatibility distance.
-/// Protects novel topologies from being outcompeted before they can optimise.
-/// </summary>
+// NEAT-style speciation. Groups agents into species based on genome compatibility distance
+//  δ = (c₁·E / N) + (c₂·D / N) + (c₃·W̄) (Stanley K.O., Risto M., 2002).
 public class SpeciationManager : MonoBehaviour
 {
     public static SpeciationManager instance;
@@ -70,132 +68,7 @@ public class SpeciationManager : MonoBehaviour
         }
     }
 
-    private void CheckAnagenesis(float worldTime)
-    {
-        List<Species> toEvolve = new List<Species>();
-
-        foreach (var s in species)
-        {
-            if (s.members.Count < Species.viabilityThreshold) continue;
-            if (!s.isViable) continue;
-            if (worldTime - s.birthTime < anagenesisMinAge) continue;
-            if (s.representative == null || s.foundingGenome == null) continue;
-
-            float drift = CompatibilityDistance(s.representative.genome, s.foundingGenome);
-            if (drift >= anagenesisThreshold)
-            {
-                toEvolve.Add(s);
-            }
-        }
-
-        foreach (var oldSpecies in toEvolve)
-        {
-            EvolveSpecies(oldSpecies);
-        }
-    }
-
-    private void EvolveSpecies(Species oldSpecies)
-    {
-        // Create successor species with all members transferred
-        int newId = nextSpeciesId++;
-        int driftGen = oldSpecies.driftGeneration + 1;
-
-        // Generate successor name inheriting ancestor's prefix
-        string newName = SpeciesNamer.GenerateSuccessorName(newId, oldSpecies.speciesName);
-
-        Species newSpecies = new Species(newId, oldSpecies.representative, oldSpecies.id, SimulationManager.instance.worldTime);
-        newSpecies.speciesName = newName;
-        newSpecies.driftGeneration = driftGen;
-        newSpecies.isViable = true; // Already proven viable
-
-        // Transfer all members to new species
-        foreach (var agent in oldSpecies.members)
-        {
-            agent.speciesId = newId;
-        }
-        newSpecies.members = new List<Agent>(oldSpecies.members);
-        oldSpecies.members.Clear();
-
-        species.Add(newSpecies);
-
-        // Fire events: evolved + new species created (extinction handled by CheckForExtinctions)
-        SimEvents.SpeciesEvolved(oldSpecies.id, newId);
-        SimEvents.SpeciesCreated(newId, oldSpecies.id);
-    }
-
-    private void HandleAgentDied(Agent agent)
-    {
-        RemoveFromSpecies(agent);
-    }
-
-    /// <summary>
-    /// Assign an agent to an existing species or create a new one.
-    /// parentSpeciesId is the species of the parent that produced this agent (-1 for initial spawn).
-    /// </summary>
-    public void AssignSpecies(Agent agent, int parentSpeciesId = -1)
-    {
-        foreach (var s in species)
-        {
-            if (s.members.Count == 0) continue;
-
-            // Compare against the species representative
-            float distance = CompatibilityDistance(agent.genome, s.representative.genome);
-            if (distance < compatibilityThreshold)
-            {
-                s.AddMember(agent);
-                agent.speciesId = s.id;
-                return;
-            }
-        }
-
-        // No compatible species found — create a new one
-        int newId = nextSpeciesId++;
-        Species newSpecies = new Species(newId, agent, parentSpeciesId, SimulationManager.instance.worldTime);
-        species.Add(newSpecies);
-        agent.speciesId = newSpecies.id;
-
-        // Don't fire creation event yet — wait until species proves viable
-        // (handled in AddMember when threshold is reached)
-    }
-
-    /// <summary>
-    /// Remove an agent from its species. Called on death.
-    /// </summary>
-    public void RemoveFromSpecies(Agent agent)
-    {
-        foreach (var s in species)
-        {
-            if (s.id == agent.speciesId)
-            {
-                s.RemoveMember(agent);
-                break;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Check for truly extinct species. Called periodically rather than on every death
-    /// to avoid false positives from deferred queues.
-    /// </summary>
-    public void CheckForExtinctions()
-    {
-        for (int i = species.Count - 1; i >= 0; i--)
-        {
-            if (species[i].members.Count == 0)
-            {
-                // Only fire extinction for viable species that haven't already been handled by EvolveSpecies
-                if (species[i].isViable)
-                {
-                    SimEvents.SpeciesExtinct(species[i].id);
-                }
-                species.RemoveAt(i);
-            }
-        }
-    }
-
-    /// <summary>
-    /// NEAT compatibility distance between two genomes.
-    /// </summary>
+    // NEAT compatibility distance between two genomes.
     public float CompatibilityDistance(Genome g1, Genome g2)
     {
         int excess = 0;
@@ -255,14 +128,141 @@ public class SpeciationManager : MonoBehaviour
         float avgWeightDiff = matchingCount > 0 ? weightDiffSum / matchingCount : 0f;
 
         return (excessCoefficient * excess / N)
-             + (disjointCoefficient * disjoint / N)
-             + (weightDiffCoefficient * avgWeightDiff);
+            + (disjointCoefficient * disjoint / N)
+            + (weightDiffCoefficient * avgWeightDiff);
+    }
+
+    // Single species genetic drift
+    private void CheckAnagenesis(float worldTime)
+    {
+        List<Species> toEvolve = new List<Species>();
+
+        foreach (var s in species)
+        {
+            if (s.members.Count < Species.viabilityThreshold) continue;
+            if (!s.isViable) continue;
+            if (worldTime - s.birthTime < anagenesisMinAge) continue;
+            if (s.representative == null || s.foundingGenome == null) continue;
+
+            float drift = CompatibilityDistance(s.representative.genome, s.foundingGenome);
+            if (drift >= anagenesisThreshold)
+            {
+                toEvolve.Add(s);
+            }
+        }
+
+        foreach (var oldSpecies in toEvolve)
+        {
+            EvolveSpecies(oldSpecies);
+        }
+    }
+
+    private void EvolveSpecies(Species oldSpecies)
+    {
+        // Create successor species with all members transferred
+        int newId = nextSpeciesId++;
+        int driftGen = oldSpecies.driftGeneration + 1;
+        string newName = SpeciesNamer.GenerateSuccessorName(newId, oldSpecies.speciesName);
+
+        Species newSpecies = new Species(newId, oldSpecies.representative, oldSpecies.id, SimulationManager.instance.worldTime);
+        newSpecies.speciesName = newName;
+        newSpecies.driftGeneration = driftGen;
+        newSpecies.isViable = true; // Already proven viable
+
+        // Transfer all members to new species
+        foreach (var agent in oldSpecies.members)
+        {
+            agent.speciesId = newId;
+        }
+        newSpecies.members = new List<Agent>(oldSpecies.members);
+        oldSpecies.members.Clear();
+
+        species.Add(newSpecies);
+
+        // Fire events: evolved + new species created (extinction handled by CheckForExtinctions)
+        SimEvents.SpeciesEvolved(oldSpecies.id, newId);
+        SimEvents.SpeciesCreated(newId, oldSpecies.id);
+    }
+
+    private void HandleAgentDied(Agent agent)
+    {
+        RemoveFromSpecies(agent);
+    }
+
+    // Assign an agent to an existing species or create a new one.
+    // parentSpeciesId is the species of the parent that produced this agent (-1 default).
+    public void AssignSpecies(Agent agent, int parentSpeciesId = -1)
+    {
+        SimulationConfig cfg = SimulationManager.instance.config;
+
+        foreach (var s in species)
+        {
+            if (s.members.Count == 0) continue;
+
+            // Compare genome topology + physical attributes
+            float distance = CompatibilityDistance(agent.genome, s.representative.genome);
+            distance += AttributeDistance(agent, s.representative, cfg);
+            if (distance < compatibilityThreshold)
+            {
+                s.AddMember(agent);
+                agent.speciesId = s.id;
+                return;
+            }
+        }
+
+        // No compatible species found
+        int newId = nextSpeciesId++;
+        Species newSpecies = new Species(newId, agent, parentSpeciesId, SimulationManager.instance.worldTime);
+        species.Add(newSpecies);
+        agent.speciesId = newSpecies.id;
+    }
+
+    // Attribute-based distance: agents with different physical traits speciate more readily.
+    // Each term is normalised to [0,1], then weighted by the coefficient.
+    private float AttributeDistance(Agent a, Agent b, SimulationConfig cfg)
+    {
+        float sizeRange = cfg.maxSize - cfg.minSize;
+        float sizeDiff = Mathf.Abs(a.size - b.size) / sizeRange;
+
+        float dietDiff = Mathf.Abs(a.dietPreference - b.dietPreference);
+
+        float attackRange = cfg.maxAttackDamage - cfg.minAttackDamage;
+        float attackDiff = attackRange > 0 ? Mathf.Abs(a.attackDamage - b.attackDamage) / attackRange : 0f;
+
+        return cfg.attributeDistanceCoefficient * (sizeDiff + dietDiff + attackDiff);
+    }
+
+    // Remove agent from a species (called on death)
+    public void RemoveFromSpecies(Agent agent)
+    {
+        foreach (var s in species)
+        {
+            if (s.id == agent.speciesId)
+            {
+                s.RemoveMember(agent);
+                break;
+            }
+        }
+    }
+
+    /// Check for extinct species. Called periodically to avoid false positives
+    public void CheckForExtinctions()
+    {
+        for (int i = species.Count - 1; i >= 0; i--)
+        {
+            if (species[i].members.Count == 0)
+            {
+                if (species[i].isViable)
+                {
+                    SimEvents.SpeciesExtinct(species[i].id);
+                }
+                species.RemoveAt(i);
+            }
+        }
     }
 }
 
-/// <summary>
-/// A species is a group of genetically similar agents.
-/// </summary>
+// A species is a group of genetically similar agents.
 public class Species
 {
     public int id;
@@ -270,9 +270,9 @@ public class Species
     public string speciesName;
     public float birthTime;
     public Agent representative;
-    public Genome foundingGenome; // Snapshot for anagenesis drift detection
+    public Genome foundingGenome; // Initial state for drift detection
     public List<Agent> members = new List<Agent>();
-    public bool isViable = false; // Only true once species reaches minimum size
+    public bool isViable = false;
     public static int viabilityThreshold; // Minimum members to count as a real species
     public int driftGeneration = 0; // How many times this lineage has drifted
 

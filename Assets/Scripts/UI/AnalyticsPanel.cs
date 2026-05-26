@@ -3,19 +3,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Toggleable analytics panel with tabbed views.
-/// Tab key toggles the panel. 1/2/3 keys switch between sub-tabs.
-/// </summary>
+// Toggleable analytics panel (with tab key)
 public class AnalyticsPanel : MonoBehaviour
 {
     [Header("Panel")]
-    public GameObject analyticsPanel; // The panel root to show/hide
+    public GameObject analyticsPanel;
     public KeyCode toggleKey = KeyCode.Tab;
 
     [Header("Tab Contents")]
     public GameObject overviewTab;
     public GameObject attributesTab;
+    public GameObject speciesTab;
 
     [Header("Tab Buttons")]
     public TMP_Text[] tabLabels;
@@ -27,6 +25,7 @@ public class AnalyticsPanel : MonoBehaviour
     public PopulationGraph populationGraph;
     public PhylogeneticDiagram phylogeneticDiagram;
     public AttributeGraph attributeGraph;
+    public SpeciesDetailPanel speciesDetailPanel;
 
     // Tab state
     private int activeTab = 0; // 0 = overview, 1 = attributes
@@ -34,6 +33,7 @@ public class AnalyticsPanel : MonoBehaviour
 
     // Tracked stats
     private float totalFoodEaten = 0;
+    private float totalMeatEaten = 0;
     private float totalPoisonEaten = 0;
     private float totalBirths = 0;
     private float totalDeaths = 0;
@@ -72,7 +72,8 @@ public class AnalyticsPanel : MonoBehaviour
     }
     private void OnFoodEaten(Food f)
     {
-        if (f.isPoison) totalPoisonEaten++;
+        if (f is PoisonFood) totalPoisonEaten++;
+        else if (f is MeatFood) totalMeatEaten++;
         else totalFoodEaten++;
     }
     private void OnSpeciesCreated(int id, int parentId) => speciesCreatedTotal++;
@@ -85,13 +86,20 @@ public class AnalyticsPanel : MonoBehaviour
             analyticsPanel.SetActive(false);
 
         // Build tabs array from assigned references
-        tabs = new GameObject[] { overviewTab, attributesTab };
+        tabs = new GameObject[] { overviewTab, attributesTab, speciesTab };
         SetActiveTab(0);
+
+        // Wire species click event
+        if (phylogeneticDiagram != null && speciesDetailPanel != null)
+            phylogeneticDiagram.OnSpeciesClicked += speciesDetailPanel.Show;
     }
 
     private void Update()
     {
-        // Toggle panel
+        // Always sample attribute data regardless of panel/tab visibility
+        if (attributeGraph != null)
+            attributeGraph.TrySample();
+
         if (Input.GetKeyDown(toggleKey))
         {
             if (analyticsPanel != null)
@@ -100,11 +108,10 @@ public class AnalyticsPanel : MonoBehaviour
 
         if (analyticsPanel == null || !analyticsPanel.activeSelf) return;
 
-        // Tab switching with number keys (only when panel is open)
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetActiveTab(0);
         if (Input.GetKeyDown(KeyCode.Alpha2)) SetActiveTab(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) SetActiveTab(2);
 
-        // Update stats text when overview tab is visible
         if (activeTab == 0 && statsText != null)
         {
             UpdateStatsText();
@@ -115,7 +122,6 @@ public class AnalyticsPanel : MonoBehaviour
     {
         activeTab = tabIndex;
 
-        // Show/hide tab content
         for (int i = 0; i < tabs.Length; i++)
         {
             if (tabs[i] != null)
@@ -130,7 +136,7 @@ public class AnalyticsPanel : MonoBehaviour
                 if (tabLabels[i] == null) continue;
                 tabLabels[i].color = (i == activeTab)
                     ? Color.white
-                    : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+                    : new Color(0.5f, 0.5f, 0.5f, 1.0f);
             }
         }
     }
@@ -155,7 +161,7 @@ public class AnalyticsPanel : MonoBehaviour
 
         // Calculate averages from current population
         float avgSize = 0, avgSpeed = 0, avgEnergy = 0, avgConns = 0;
-        float avgRepRange = 0, avgVisionRange = 0;
+        float avgVisionRange = 0, avgDiet = 0;
         var agents = AgentManager.instance.agents;
         if (pop > 0)
         {
@@ -167,15 +173,15 @@ public class AnalyticsPanel : MonoBehaviour
                 avgSpeed += a.speed;
                 avgEnergy += a.energy;
                 avgConns += a.genome.connectionGenes.Count;
-                avgRepRange += a.reproductionRange;
                 avgVisionRange += a.visionDistance;
+                avgDiet += a.dietPreference;
             }
             avgSize /= pop;
             avgSpeed /= pop;
             avgEnergy /= pop;
             avgConns /= pop;
-            avgRepRange /= pop;
             avgVisionRange /= pop;
+            avgDiet /= pop;
         }
 
         statsText.text =
@@ -191,10 +197,11 @@ public class AnalyticsPanel : MonoBehaviour
             $"Species Created: {speciesCreatedTotal}  |  Extinct: {speciesExtinctTotal}\n" +
             $"\n<b>Population Averages</b>\n" +
             $"Size: {avgSize:F2}  |  Speed: {avgSpeed:F2}\n" +
-            $"Vision: {avgVisionRange:F1}  |  Rep Range: {avgRepRange:F1}\n" +
+            $"Vision: {avgVisionRange:F1}\n" +
             $"Energy: {avgEnergy:F1}  |  Connections: {avgConns:F1}\n" +
+            $"Diet: {avgDiet:F2} (0=herb, 1=carn)\n" +
             $"\n<b>Resources</b>\n" +
-            $"Food Eaten: {totalFoodEaten:F0}  |  Poison Eaten: {totalPoisonEaten:F0}\n" +
+            $"Plant Eaten: {totalFoodEaten:F0}  |  Meat Eaten: {totalMeatEaten:F0}  |  Poison: {totalPoisonEaten:F0}\n" +
             $"Food in World: {FoodSpawner.instance.foodList.Count}";
     }
 
@@ -229,7 +236,6 @@ public class AnalyticsPanel : MonoBehaviour
             inactiveTabStyle.alignment = TextAnchor.MiddleCenter;
         }
 
-        // Draw tab bar at the top-center of the screen
         float barWidth = 300f;
         float barHeight = 28f;
         float barX = (Screen.width - barWidth) / 2f;
@@ -237,7 +243,7 @@ public class AnalyticsPanel : MonoBehaviour
 
         GUI.Box(new Rect(barX, barY, barWidth, barHeight), "", tabBarStyle);
 
-        float tabWidth = barWidth / 2f;
+        float tabWidth = barWidth / 3f;
 
         // Tab 1: Overview
         GUIStyle style1 = activeTab == 0 ? activeTabStyle : inactiveTabStyle;
@@ -248,6 +254,11 @@ public class AnalyticsPanel : MonoBehaviour
         GUIStyle style2 = activeTab == 1 ? activeTabStyle : inactiveTabStyle;
         if (GUI.Button(new Rect(barX + tabWidth, barY, tabWidth, barHeight), "[2] Attributes", style2))
             SetActiveTab(1);
+
+        // Tab 3: Species
+        GUIStyle style3 = activeTab == 2 ? activeTabStyle : inactiveTabStyle;
+        if (GUI.Button(new Rect(barX + tabWidth * 2, barY, tabWidth, barHeight), "[3] Species", style3))
+            SetActiveTab(2);
     }
 
     private Texture2D MakeTexture(int width, int height, Color colour)

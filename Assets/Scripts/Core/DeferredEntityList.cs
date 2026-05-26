@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 
-/// <summary>
-/// A generic list with deferred add/remove queues.
-/// Safely modify during iteration by queuing changes and applying after.
-/// </summary>
+// A generic list with deferred add/remove queues.
 public class DeferredEntityList<T>
 {
     private readonly List<T> _items = new List<T>();
@@ -25,9 +22,7 @@ public class DeferredEntityList<T>
         _toRemove.Add(item);
     }
 
-    /// <summary>
-    /// Apply all queued additions and removals. Call after iteration is complete.
-    /// </summary>
+    // Apply all queued additions and removals.
     public void ApplyChanges()
     {
         if (_toAdd.Count > 0)
@@ -38,15 +33,12 @@ public class DeferredEntityList<T>
 
         if (_toRemove.Count > 0)
         {
-            // Single-pass removal with O(1) HashSet lookup per item
             _items.RemoveAll(item => _toRemove.Contains(item));
             _toRemove.Clear();
         }
     }
 
-    /// <summary>
-    /// Remove null entries (for Unity objects that have been destroyed).
-    /// </summary>
+    // Remove null entries (mostly objects that have been destroyed)).
     public void RemoveNullAt(int index)
     {
         _items.RemoveAt(index);

@@ -3,11 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Draws a simple population and generation graph over time.
-/// Attach to a UI GameObject with a RawImage component.
-/// Supports scrolling back through history with the mouse wheel.
-/// </summary>
+// Population and avg. generation graph over time.
 public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Graph Settings")]
@@ -30,7 +26,7 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
     private int maxGenerationSeen = 1;
 
     // Scrolling
-    private int viewOffset = 0; // 0 = live (showing latest), >0 = scrolled back
+    private int viewOffset = 0; // 0 = live, >0 = scrolled back
     private bool isHovered = false;
     private bool needsRedraw = false;
 
@@ -72,7 +68,6 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
             populationData.Add(pop);
             generationData.Add(gen);
 
-            // Only redraw if we're in live mode
             if (IsLive)
                 needsRedraw = true;
         }
@@ -87,20 +82,19 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
     public void OnScroll(PointerEventData eventData)
     {
         float scroll = eventData.scrollDelta.y;
-        int scrollAmount = Mathf.Max(1, maxSamples / 10); // Scroll ~10% of visible window
+        int scrollAmount = Mathf.Max(1, maxSamples / 10);
 
         if (scroll > 0)
         {
-            // Scroll back (into history)
+            // Scroll back
             viewOffset += scrollAmount;
         }
         else if (scroll < 0)
         {
-            // Scroll forward (toward present)
+            // Scroll forward
             viewOffset -= scrollAmount;
         }
 
-        // Clamp
         int maxOffset = Mathf.Max(0, populationData.Count - maxSamples);
         viewOffset = Mathf.Clamp(viewOffset, 0, maxOffset);
 
@@ -123,7 +117,7 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
         int visibleCount = endIndex - startIndex;
         if (visibleCount < 2) return;
 
-        // Draw population line
+        // Population line
         for (int i = 1; i < visibleCount; i++)
         {
             int dataIdx = startIndex + i;
@@ -134,7 +128,7 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
             DrawLine(x0, y0, x1, y1, populationColour);
         }
 
-        // Draw generation line
+        // Generation line
         for (int i = 1; i < visibleCount; i++)
         {
             int dataIdx = startIndex + i;
@@ -145,7 +139,6 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
             DrawLine(x0, y0, x1, y1, generationColour);
         }
 
-        // Draw "PAUSED" indicator when scrolled back
         if (!IsLive)
         {
             Color32 pauseColour = new Color(1f, 1f, 1f, 0.5f);
@@ -199,7 +192,6 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
             legendStyle.fontStyle = FontStyle.Bold;
         }
 
-        // Get the RawImage's screen rect
         RectTransform rt = graphImage.GetComponent<RectTransform>();
         Vector3[] corners = new Vector3[4];
         rt.GetWorldCorners(corners);
@@ -215,14 +207,14 @@ public class PopulationGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandl
         float rectWidth = screenMax.x - screenMin.x;
         float rectHeight = screenMax.y - screenMin.y;
 
-        // Draw legend (top-left of graph)
+        // Legend
         legendStyle.normal.textColor = populationColour;
         GUI.Label(new Rect(rectX + 4, rectY + 2, 120, 14), "-- Population", legendStyle);
 
         legendStyle.normal.textColor = generationColour;
         GUI.Label(new Rect(rectX + 4, rectY + 14, 120, 14), "-- Generation", legendStyle);
 
-        // Draw Y-axis max labels (top-right of graph)
+        // Y-axis max labels
         labelStyle.normal.textColor = populationColour;
         GUI.Label(new Rect(rectX + rectWidth - 80, rectY + 2, 76, 14), $"Pop: {maxPopulationSeen}", labelStyle);
 

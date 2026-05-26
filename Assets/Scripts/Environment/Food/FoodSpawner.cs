@@ -8,12 +8,14 @@ public class FoodSpawner : MonoBehaviour
     [Header("Food Settings")]
     public GameObject foodPrefab;
     public GameObject poisonFoodPrefab;
+    public GameObject meatFoodPrefab;
     public int initialFoodCount = 150;
     public int maxFoodCount = 250;
     public float foodSpawnTime;
     public float maxSpawnTime = 1f;
     private DeferredEntityList<Food> _foodList = new DeferredEntityList<Food>();
     public IReadOnlyList<Food> foodList => _foodList.Items;
+    private int plantFoodCount = 0;
     public TemperatureMap temperatureMap;
 
 
@@ -43,6 +45,37 @@ public class FoodSpawner : MonoBehaviour
     private void HandleFoodConsumed(Food food)
     {
         _foodList.QueueRemove(food);
+        if (food is not MeatFood && food is not PoisonFood)
+            plantFoodCount--;
+    }
+
+    public void DropDeathFood(Vector3 position, float agentEnergy)
+    {
+        SimulationConfig cfg = SimulationManager.instance.config;
+        if (cfg.deathFoodDropCount <= 0) return;
+        if (agentEnergy <= 0f) return; // Starved agents drop no meat
+
+        float totalNutrition = agentEnergy * cfg.deathFoodNutritionPerEnergy;
+        float nutritionPerDrop = totalNutrition / cfg.deathFoodDropCount;
+
+        for (int i = 0; i < cfg.deathFoodDropCount; i++)
+        {
+
+            Vector2 offset = new Vector2(
+                SimRandom.Range(-cfg.deathFoodScatter, cfg.deathFoodScatter),
+                SimRandom.Range(-cfg.deathFoodScatter, cfg.deathFoodScatter));
+            Vector2 dropPos = (Vector2)position + offset;
+            dropPos.x = Mathf.Clamp(dropPos.x, 0, cfg.worldSize);
+            dropPos.y = Mathf.Clamp(dropPos.y, 0, cfg.worldSize);
+
+            GameObject prefab = meatFoodPrefab != null ? meatFoodPrefab : foodPrefab;
+            GameObject foodObject = Instantiate(prefab, dropPos, Quaternion.identity);
+            Food food = foodObject.GetComponent<Food>();
+            food.position = dropPos;
+            food.biomeTemperature = 0.5f;
+            food.nutritionValue = nutritionPerDrop;
+            FoodListAdd(food);
+        }
     }
 
     private void Start()
@@ -89,7 +122,7 @@ public class FoodSpawner : MonoBehaviour
 
     public void SpawnFood()
     {
-        if (_foodList.Count + _foodList.PendingAddCount >= maxFoodCount) return;
+        if (plantFoodCount >= maxFoodCount) return;
 
         Vector2 randomPosition = GetRandomPositionInWorld();
         if (FoodCheck(randomPosition))
@@ -101,17 +134,17 @@ public class FoodSpawner : MonoBehaviour
                 Mathf.FloorToInt(randomPosition.y));
 
             SimulationConfig cfg = SimulationManager.instance.config;
-            bool isPoison = temperature < cfg.poisonTemperatureThreshold && SimRandom.NextFloat() < cfg.poisonSpawnChance;
-            GameObject prefab = (isPoison && poisonFoodPrefab != null) ? poisonFoodPrefab : foodPrefab;
+            bool spawnPoison = temperature < cfg.poisonTemperatureThreshold && SimRandom.NextFloat() < cfg.poisonSpawnChance;
+            GameObject prefab = (spawnPoison && poisonFoodPrefab != null) ? poisonFoodPrefab : foodPrefab;
 
             GameObject foodObject = Instantiate(prefab, randomPosition, Quaternion.identity);
             Food food = foodObject.GetComponent<Food>();
 
             food.position = randomPosition;
-            food.isPoison = isPoison;
             food.biomeTemperature = temperature; // Pass temperature for nutrition scaling
-            // Notify Manager object
             FoodListAdd(food);
+            if (!spawnPoison)
+                plantFoodCount++;
         }
     }
 
@@ -122,6 +155,8 @@ public class FoodSpawner : MonoBehaviour
     public void FoodListRemove(Food food)
     {
         _foodList.QueueRemove(food);
+        if (food is not MeatFood && food is not PoisonFood)
+            plantFoodCount--;
     }
     private Vector2 GetRandomPositionInWorld()
     {

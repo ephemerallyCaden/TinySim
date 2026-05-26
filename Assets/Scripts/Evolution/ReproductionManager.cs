@@ -21,7 +21,6 @@ public static class ReproductionManager
             parent1.generation + 1,
             position,
             attrs,
-            cfg.offspringHealthBase,
             parent1.reproductionEnergyCost * cfg.offspringEnergyMultiplier,
             attrs.size * cfg.maxEnergyPerSize,
             childGenome,

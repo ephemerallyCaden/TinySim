@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Periodic diagnostic logging to understand agent behaviour.
-/// Attach to a GameObject in the scene. Logs every N seconds.
-/// </summary>
+// Periodic agent and environment diagnostic logging
 public class SimDiagnostics : MonoBehaviour
 {
     [Header("Settings")]
@@ -38,7 +35,7 @@ public class SimDiagnostics : MonoBehaviour
     private void OnBirth(Agent a) => totalBirths++;
     private void OnFoodEaten(Food f)
     {
-        if (f.isPoison) poisonEaten++;
+        if (f is PoisonFood) poisonEaten++;
         else foodEaten++;
     }
 

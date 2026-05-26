@@ -1,10 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Base class for GPU-instanced mesh rendering.
-/// Uses pre-allocated arrays to avoid per-frame GC allocations.
-/// </summary>
+// Base class for GPU-instanced mesh rendering.
+// Uses pre-allocated arrays to avoid per-frame GC allocations.
 public abstract class InstancedRenderer : MonoBehaviour
 {
     private const int GPU_INSTANCE_BATCH_LIMIT = 1023;
@@ -30,9 +28,7 @@ public abstract class InstancedRenderer : MonoBehaviour
     protected abstract Mesh CreateMesh();
     protected abstract void PopulateRenderData();
 
-    /// <summary>
-    /// Add an instance to render this frame. Call from PopulateRenderData.
-    /// </summary>
+    // Add an instance to render current frame. Call from PopulateRenderData.
     protected void AddInstance(Matrix4x4 matrix, Vector4 colour)
     {
         if (instanceCount >= _matrixArray.Length)

@@ -26,9 +26,7 @@ public class UILineRenderer : MaskableGraphic
             vh.AddTriangle(index, index + 1, index + 3);
             vh.AddTriangle(index + 3, index + 2, index);
 
-            // These two triangles create the beveled edges
-            // between line segments using the end point of
-            // the last line segment and the start points of this one
+            // These two triangles create the beveled edges between line segments using the end point of the last line segment and the start points of this one
             if (i != 0)
             {
                 vh.AddTriangle(index, index - 1, index - 3);
@@ -37,12 +35,11 @@ public class UILineRenderer : MaskableGraphic
         }
     }
 
-    /// <summary>
-    /// Creates a rect from two points that acts as a line segment
-    /// </summary>
-    /// <param name="point1">The starting point of the segment</param>
-    /// <param name="point2">The endint point of the segment</param>
-    /// <param name="vh">The vertex helper that the segment is added to</param>
+    // Creates a rect from two points that acts as a line segment
+    // Args:
+    // point1: The starting point of the segment.
+    // point2: The endint point of the segment.
+    // vh: The vertex helper that the segment is added to</param>
     private void CreateLineSegment(Vector3 point1, Vector3 point2, VertexHelper vh)
     {
         Vector3 offset = center ? (rectTransform.sizeDelta / 2) : Vector2.zero;
@@ -74,12 +71,12 @@ public class UILineRenderer : MaskableGraphic
         vh.AddVert(vertex);
     }
 
-    /// <summary>
-    /// Gets the angle that a vertex needs to rotate to face target vertex
-    /// </summary>
-    /// <param name="vertex">The vertex being rotated</param>
-    /// <param name="target">The vertex to rotate towards</param>
-    /// <returns>The angle required to rotate vertex towards target</returns>
+    // Gets the angle that a vertex needs to rotate to face target vertex
+    // Args:
+    // vertex: the vertex being rotated
+    // target: the vertex to rotate towards
+
+    // Returns: angle required to rotate vertex towards target
     private float RotatePointTowards(Vector2 vertex, Vector2 target)
     {
         return (float)(Mathf.Atan2(target.y - vertex.y, target.x - vertex.x) * (180 / Mathf.PI));

@@ -4,7 +4,7 @@ public class TemperatureMap : MonoBehaviour
     private float[,] temperatureMap;
     private SpriteRenderer backgroundRenderer;
 
-    public void GenerateTemperatureMap(int width, int height, float scale)
+    public void GenerateTemperatureMap(int width, int height, float scale, float coldSkewPower)
     {
         temperatureMap = new float[width, height];
         // Set a random seed
@@ -16,8 +16,8 @@ public class TemperatureMap : MonoBehaviour
             {
                 // Use Perlin noise to generate temperature variation
                 float raw = Mathf.PerlinNoise(x / (float)width * scale + offsetX, y / (float)height * scale + offsetY);
-                // Skew toward cold: power of 1.5 makes warm areas smaller but not extreme
-                float temperature = Mathf.Pow(raw, 1.5f);
+                // Skew toward cold: higher power = more cold area
+                float temperature = Mathf.Pow(raw, coldSkewPower);
                 temperatureMap[x, y] = Mathf.Clamp01(temperature);
             }
         }

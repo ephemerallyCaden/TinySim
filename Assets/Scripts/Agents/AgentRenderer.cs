@@ -25,13 +25,16 @@ public class AgentRenderer : InstancedRenderer
             if (agent == null) continue;
             if (float.IsNaN(agent.position.x) || float.IsNaN(agent.position.y)) continue;
 
-            // Body
+            // Body — flash red when taking damage
+            Color bodyColour = agent.damageFlashTimer > 0f
+                ? Color.Lerp(agent.colour, Color.red, agent.damageFlashTimer / 0.15f)
+                : agent.colour;
             Matrix4x4 bodyMatrix = Matrix4x4.TRS(
                 new Vector3(agent.position.x, agent.position.y, 0),
                 Quaternion.Euler(0, 0, agent.rotation),
                 Vector3.one * agent.size
             );
-            AddInstance(bodyMatrix, agent.colour);
+            AddInstance(bodyMatrix, bodyColour);
 
             // Eyes
             for (int i = 0; i < 2; i++)

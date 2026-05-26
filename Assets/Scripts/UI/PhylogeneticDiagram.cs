@@ -293,6 +293,7 @@ public class PhylogeneticDiagram : MonoBehaviour, IScrollHandler, IPointerEnterH
             // Live average colour of the species
             Color32 col32 = GetLiveSpeciesColour(speciesId, entry.colour);
 
+
             for (int t = -thickness / 2; t <= thickness / 2; t++)
             {
                 int py = centerY + t;
@@ -357,33 +358,112 @@ public class PhylogeneticDiagram : MonoBehaviour, IScrollHandler, IPointerEnterH
             }
         }
 
-        // Depth-first traversal assigns sequential lanes — keeps families together
-        int nextLane = 0;
+        // Assign lanes spreading from centre — children alternate above and below parents
         laneAssignments.Clear();
         lanesOccupied = new bool[maxLanes];
 
+        // Place roots around the centre
+        int centre = maxLanes / 2;
+        int nextLane = centre;
 
-        foreach (int root in roots)
+        for (int r = 0; r < roots.Count; r++)
         {
-            AssignLanesDFS(root, children, ref nextLane);
-        }
+            // Spread roots from centre outward alternating
+            int rootLane;
+            if (r == 0)
+            {
+                rootLane = centre;
+            }
+            else
+            {
+                int dir = (r % 2 == 0) ? 1 : -1;
+                int dist = (r + 1) / 2;
+                rootLane = centre + dir * dist * 2; // Space roots apart
+                rootLane = Mathf.Clamp(rootLane, 0, maxLanes - 1);
+            }
 
+            // Find nearest free lane to desired root position
+            for (int offset = 0; offset < maxLanes; offset++)
+            {
+                int above = rootLane + offset;
+                if (above < maxLanes && !lanesOccupied[above])
+                {
+                    rootLane = above;
+                    break;
+                }
+                int below = rootLane - offset;
+                if (below >= 0 && !lanesOccupied[below])
+                {
+                    rootLane = below;
+                    break;
+                }
+            }
+
+            laneAssignments[roots[r]] = rootLane;
+            lanesOccupied[rootLane] = true;
+            AssignLanesDFS(roots[r], children, ref nextLane);
+        }
     }
 
     private void AssignLanesDFS(int speciesId, Dictionary<int, List<int>> children, ref int nextLane)
     {
-        if (nextLane >= maxLanes) return;
-
-        laneAssignments[speciesId] = nextLane;
-        lanesOccupied[nextLane] = true;
-        nextLane++;
-
-        if (children.ContainsKey(speciesId))
+        // Assign this node to the next available lane (used as fallback counter)
+        if (!laneAssignments.ContainsKey(speciesId))
         {
-            foreach (int childId in children[speciesId])
+            if (nextLane >= maxLanes) return;
+            laneAssignments[speciesId] = nextLane;
+            lanesOccupied[nextLane] = true;
+            nextLane++;
+        }
+
+        if (!children.ContainsKey(speciesId)) return;
+
+        int parentLane = laneAssignments[speciesId];
+        var childList = children[speciesId];
+
+        // Place children alternating above and below the parent
+        for (int i = 0; i < childList.Count; i++)
+        {
+            int childId = childList[i];
+            if (laneAssignments.ContainsKey(childId)) continue;
+
+            // Alternate: even children go below (higher lane), odd go above (lower lane)
+            int direction = (i % 2 == 0) ? 1 : -1;
+            int searchStart = (i / 2) + 1;
+
+            bool placed = false;
+            for (int offset = searchStart; offset < maxLanes; offset++)
             {
-                AssignLanesDFS(childId, children, ref nextLane);
+                int candidate = parentLane + (direction * offset);
+                if (candidate >= 0 && candidate < maxLanes && !lanesOccupied[candidate])
+                {
+                    laneAssignments[childId] = candidate;
+                    lanesOccupied[candidate] = true;
+                    placed = true;
+                    break;
+                }
             }
+
+            // Fallback: try the other direction
+            if (!placed)
+            {
+                for (int offset = 1; offset < maxLanes; offset++)
+                {
+                    int candidate = parentLane + (-direction * offset);
+                    if (candidate >= 0 && candidate < maxLanes && !lanesOccupied[candidate])
+                    {
+                        laneAssignments[childId] = candidate;
+                        lanesOccupied[candidate] = true;
+                        placed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!placed) continue;
+
+            // Recurse into this child's subtree
+            AssignLanesDFS(childId, children, ref nextLane);
         }
     }
 
@@ -671,6 +751,8 @@ public class PhylogeneticDiagram : MonoBehaviour, IScrollHandler, IPointerEnterH
         graphTexture.Apply();
     }
 
+    public System.Action<int> OnSpeciesClicked;
+
     private GUIStyle labelStyle;
 
     private void OnGUI()
@@ -685,6 +767,7 @@ public class PhylogeneticDiagram : MonoBehaviour, IScrollHandler, IPointerEnterH
             labelStyle = new GUIStyle(GUI.skin.label);
             labelStyle.fontSize = 10;
             labelStyle.fontStyle = FontStyle.Bold;
+            labelStyle.hover.textColor = Color.white;
         }
 
         // Get the RawImage's screen rect
@@ -719,7 +802,10 @@ public class PhylogeneticDiagram : MonoBehaviour, IScrollHandler, IPointerEnterH
             float screenY = rectY + normalizedY * rectHeight;
 
             labelStyle.normal.textColor = entry.colour;
-            GUI.Label(new Rect(rectX + 4, screenY - 7, 100, 20), entry.speciesName, labelStyle);
+            if (GUI.Button(new Rect(rectX + 4, screenY - 7, 100, 20), entry.speciesName, labelStyle))
+            {
+                OnSpeciesClicked?.Invoke(speciesId);
+            }
         }
     }
 }

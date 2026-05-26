@@ -49,7 +49,7 @@ MonoBehaviour:
   size: 0
   colour: {r: 0.7476058, g: 1, b: 0.53396225, a: 1}
   despawnTime: 100
-  nutritionValue: 10
+  nutritionValue: 0
   col: {fileID: 2722153801566295309}
 --- !u!58 &2722153801566295309
 CircleCollider2D:

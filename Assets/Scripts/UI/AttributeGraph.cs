@@ -3,50 +3,29 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Draws a graph of population-average gene attributes over time.
-/// Attach to a UI GameObject with a RawImage component.
-/// Supports switching between attributes and scrolling back through history.
-/// </summary>
+// Draws a graph of population-average gene attributes over time.
 public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    public enum GeneAttribute
+    public struct AttributeEntry
     {
-        Size,
-        Speed,
-        VisionDistance,
-        VisionAngle,
-        ReproductionRange,
-        ReproductionCooldown,
-        ReproductionEnergyCost,
-        MutationChanceMod,
-        MutationMagnitudeMod
+        public string name;
+        public Color colour;
+        public AttributeEntry(string name, Color colour) { this.name = name; this.colour = colour; }
     }
 
-    private static readonly string[] attributeNames = new string[]
+    // Single source of truth for tracked attributes: order, name, and colour.
+    public static readonly AttributeEntry[] attributes = new AttributeEntry[]
     {
-        "Size",
-        "Speed",
-        "Vision Distance",
-        "Vision Angle",
-        "Reproduction Range",
-        "Reproduction Cooldown",
-        "Reproduction Energy Cost",
-        "Mutation Chance Mod",
-        "Mutation Magnitude Mod"
-    };
-
-    private static readonly Color[] attributeColours = new Color[]
-    {
-        new Color(0.2f, 0.8f, 0.2f),    // Size - green
-        new Color(0.9f, 0.4f, 0.1f),    // Speed - orange
-        new Color(0.3f, 0.6f, 1.0f),    // Vision Distance - blue
-        new Color(0.7f, 0.3f, 1.0f),    // Vision Angle - purple
-        new Color(1.0f, 0.8f, 0.2f),    // Reproduction Range - gold
-        new Color(0.0f, 0.9f, 0.9f),    // Reproduction Cooldown - teal
-        new Color(1.0f, 0.3f, 0.5f),    // Reproduction Energy Cost - pink
-        new Color(0.6f, 0.9f, 0.3f),    // Mutation Chance Mod - lime
-        new Color(0.9f, 0.6f, 0.8f)     // Mutation Magnitude Mod - light pink
+        new AttributeEntry("Size",                      new Color(0.2f, 0.8f, 0.2f)),
+        new AttributeEntry("Speed",                     new Color(0.9f, 0.4f, 0.1f)),
+        new AttributeEntry("Vision Distance",           new Color(0.3f, 0.6f, 1.0f)),
+        new AttributeEntry("Vision Angle",              new Color(0.7f, 0.3f, 1.0f)),
+        new AttributeEntry("Reproduction Cooldown",     new Color(0.0f, 0.9f, 0.9f)),
+        new AttributeEntry("Reproduction Energy Cost",  new Color(1.0f, 0.3f, 0.5f)),
+        new AttributeEntry("Mutation Chance Mod",       new Color(0.6f, 0.9f, 0.3f)),
+        new AttributeEntry("Mutation Magnitude Mod",    new Color(0.9f, 0.6f, 0.8f)),
+        new AttributeEntry("Attack Damage",             new Color(1.0f, 0.5f, 0.0f)),
+        new AttributeEntry("Diet Preference",           new Color(0.8f, 0.2f, 0.2f)),
     };
 
     [Header("Graph Settings")]
@@ -63,13 +42,11 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
     private Color[] clearPixels; // Pre-allocated to avoid per-redraw GC allocation
     private float nextSampleTime = 0f;
 
-    // Store history for ALL attributes simultaneously
     private int attributeCount;
     private List<float>[] attributeData;
     private float[] maxValueSeen;
 
-    // Currently displayed attribute
-    private GeneAttribute currentAttribute = GeneAttribute.Size;
+    private int currentAttribute = 0;
 
     // Scrolling
     private int viewOffset = 0;
@@ -106,7 +83,7 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             clearPixels[i] = backgroundColor;
 
         // Initialise data storage for all attributes
-        attributeCount = System.Enum.GetValues(typeof(GeneAttribute)).Length;
+        attributeCount = attributes.Length;
         attributeData = new List<float>[attributeCount];
         maxValueSeen = new float[attributeCount];
         for (int i = 0; i < attributeCount; i++)
@@ -120,7 +97,8 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
 
     private bool IsVisible => graphImage != null && graphImage.gameObject.activeInHierarchy;
 
-    private void Update()
+    // Called externally by AnalyticsPanel so data is collected even when tab is inactive.
+    public void TrySample()
     {
         float worldTime = SimulationManager.instance.worldTime;
         if (worldTime >= nextSampleTime)
@@ -128,11 +106,13 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             nextSampleTime += sampleInterval;
             SampleAllAttributes();
 
-            if (IsLive && IsVisible)
+            if (IsLive)
                 needsRedraw = true;
         }
+    }
 
-        // Only redraw when actually visible
+    private void Update()
+    {
         if (needsRedraw && IsVisible)
         {
             needsRedraw = false;
@@ -147,7 +127,6 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
 
         if (pop == 0)
         {
-            // Store zeros if no population
             for (int i = 0; i < attributeCount; i++)
             {
                 attributeData[i].Add(0f);
@@ -155,10 +134,10 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             return;
         }
 
-        // Accumulate all attributes in one pass
         float sumSize = 0, sumSpeed = 0, sumVisionDist = 0, sumVisionAngle = 0;
-        float sumRepRange = 0, sumRepCooldown = 0, sumRepEnergyCost = 0;
-        float sumMutChance = 0, sumMutMagnitude = 0;
+        float sumRepCooldown = 0, sumRepEnergyCost = 0;
+        float sumMutChance = 0, sumMutMagnitude = 0, sumAttackDamage = 0;
+        float sumDietPreference = 0;
         int validCount = 0;
 
         for (int i = 0; i < agents.Count; i++)
@@ -170,11 +149,12 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             sumSpeed += a.speed;
             sumVisionDist += a.visionDistance;
             sumVisionAngle += a.visionAngle;
-            sumRepRange += a.reproductionRange;
             sumRepCooldown += a.maxReproductionCooldown;
             sumRepEnergyCost += a.reproductionEnergyCost;
             sumMutChance += a.mutationChanceMod;
             sumMutMagnitude += a.mutationMagnitudeMod;
+            sumAttackDamage += a.attackDamage;
+            sumDietPreference += a.dietPreference;
         }
 
         if (validCount == 0) validCount = 1;
@@ -185,11 +165,12 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             sumSpeed / validCount,
             sumVisionDist / validCount,
             sumVisionAngle / validCount,
-            sumRepRange / validCount,
             sumRepCooldown / validCount,
             sumRepEnergyCost / validCount,
             sumMutChance / validCount,
-            sumMutMagnitude / validCount
+            sumMutMagnitude / validCount,
+            sumAttackDamage / validCount,
+            sumDietPreference / validCount
         };
 
         for (int i = 0; i < attributeCount; i++)
@@ -200,19 +181,16 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
         }
     }
 
-    /// <summary>
-    /// Switch which attribute is displayed. Redraws instantly from stored data.
-    /// </summary>
-    public void SetAttribute(GeneAttribute attribute)
+    // Switch which attribute is displayed.
+    public void SetAttribute(int attributeIndex)
     {
-        currentAttribute = attribute;
+        currentAttribute = attributeIndex;
         showDropdown = false;
         needsRedraw = true;
     }
 
     private void OnEnable()
     {
-        // Redraw when tab becomes visible
         needsRedraw = true;
     }
 
@@ -244,23 +222,21 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
     {
         ClearGraph();
 
-        int attrIdx = (int)currentAttribute;
-        var data = attributeData[attrIdx];
+        var data = attributeData[currentAttribute];
         int dataCount = data.Count;
         if (dataCount < 2) return;
 
-        // Calculate visible window
+        // Current visible window
         int endIndex = dataCount - viewOffset;
         int startIndex = Mathf.Max(0, endIndex - maxSamples);
         int visibleCount = endIndex - startIndex;
         if (visibleCount < 2) return;
 
-        float maxVal = maxValueSeen[attrIdx];
+        float maxVal = maxValueSeen[currentAttribute];
         if (maxVal < 0.001f) maxVal = 1f;
 
-        Color colour = attributeColours[attrIdx];
+        Color colour = attributes[currentAttribute].colour;
 
-        // Draw the line
         for (int i = 1; i < visibleCount; i++)
         {
             int dataIdx = startIndex + i;
@@ -271,7 +247,6 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             TextureDrawUtils.DrawLine(graphTexture, x0, y0, x1, y1, colour, 2);
         }
 
-        // Draw scroll indicator when not live
         if (!IsLive)
         {
             Color32 pauseColour = new Color(1f, 1f, 1f, 0.5f);
@@ -297,7 +272,6 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
     {
         if (!IsVisible) return;
 
-        // Create styles once
         if (labelStyle == null)
         {
             labelStyle = new GUIStyle(GUI.skin.label);
@@ -332,7 +306,6 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             dropdownItemHoverStyle.normal.textColor = Color.yellow;
         }
 
-        // Get the RawImage's screen rect
         RectTransform rt = graphImage.GetComponent<RectTransform>();
         Vector3[] corners = new Vector3[4];
         rt.GetWorldCorners(corners);
@@ -348,36 +321,33 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
         float rectWidth = screenMax.x - screenMin.x;
         float rectHeight = screenMax.y - screenMin.y;
 
-        int attrIdx = (int)currentAttribute;
-
-        // Draw legend (current attribute name with its colour)
-        legendStyle.normal.textColor = attributeColours[attrIdx];
-        GUI.Label(new Rect(rectX + 4, rectY + 2, 180, 14), $"-- {attributeNames[attrIdx]}", legendStyle);
+        // Draw legend
+        legendStyle.normal.textColor = attributes[currentAttribute].colour;
+        GUI.Label(new Rect(rectX + 4, rectY + 2, 180, 14), $"-- {attributes[currentAttribute].name}", legendStyle);
 
         // Draw Y-axis max value label
-        labelStyle.normal.textColor = attributeColours[attrIdx];
-        GUI.Label(new Rect(rectX + rectWidth - 90, rectY + 2, 86, 14), $"Max: {maxValueSeen[attrIdx]:F2}", labelStyle);
+        labelStyle.normal.textColor = attributes[currentAttribute].colour;
+        GUI.Label(new Rect(rectX + rectWidth - 90, rectY + 2, 86, 14), $"Max: {maxValueSeen[currentAttribute]:F2}", labelStyle);
 
-        // Draw current value (latest sample)
-        if (attributeData[attrIdx].Count > 0)
+        // Draw current value
+        if (attributeData[currentAttribute].Count > 0)
         {
-            float latest = attributeData[attrIdx][attributeData[attrIdx].Count - 1];
+            float latest = attributeData[currentAttribute][attributeData[currentAttribute].Count - 1];
             labelStyle.normal.textColor = Color.white;
             GUI.Label(new Rect(rectX + rectWidth - 90, rectY + 14, 86, 14), $"Avg: {latest:F2}", labelStyle);
         }
 
-        // Dropdown button (below graph)
+        // Dropdown button
         float dropdownX = rectX + 4;
         float dropdownY = rectY + rectHeight + 2;
         float dropdownWidth = 180;
         float dropdownButtonHeight = 18;
 
-        if (GUI.Button(new Rect(dropdownX, dropdownY, dropdownWidth, dropdownButtonHeight), $"Attribute: {attributeNames[attrIdx]}", buttonStyle))
+        if (GUI.Button(new Rect(dropdownX, dropdownY, dropdownWidth, dropdownButtonHeight), $"Attribute: {attributes[currentAttribute].name}", buttonStyle))
         {
             showDropdown = !showDropdown;
         }
 
-        // Draw dropdown list if open
         if (showDropdown)
         {
             float itemHeight = 16;
@@ -389,12 +359,12 @@ public class AttributeGraph : MonoBehaviour, IScrollHandler, IPointerEnterHandle
             for (int i = 0; i < attributeCount; i++)
             {
                 float itemY = listY + 2 + i * itemHeight;
-                GUIStyle style = (i == attrIdx) ? dropdownItemHoverStyle : dropdownItemStyle;
-                style.normal.textColor = attributeColours[i];
+                GUIStyle style = (i == currentAttribute) ? dropdownItemHoverStyle : dropdownItemStyle;
+                style.normal.textColor = attributes[i].colour;
 
-                if (GUI.Button(new Rect(dropdownX + 2, itemY, dropdownWidth - 4, itemHeight), attributeNames[i], style))
+                if (GUI.Button(new Rect(dropdownX + 2, itemY, dropdownWidth - 4, itemHeight), attributes[i].name, style))
                 {
-                    SetAttribute((GeneAttribute)i);
+                    SetAttribute(i);
                 }
             }
         }

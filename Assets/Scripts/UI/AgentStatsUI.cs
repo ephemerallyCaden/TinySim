@@ -66,8 +66,14 @@ public class AgentStatsUI : MonoBehaviour
             //Update all text values
             string speciesName = GetSpeciesName(selectedAgent.speciesId);
             nameText.text = $"ID: {selectedAgent.id}    Species: {speciesName}    Gen: {selectedAgent.generation}";
-            energyText.text = $"Age: {selectedAgent.age} \nEnergy: {selectedAgent.energy:F0} / {selectedAgent.maxEnergy:F0} \nHealth: {selectedAgent.health} \nMetabolism Cost: {selectedAgent.metabolismCost} \n";
-            attributesText.text = $"Size: {selectedAgent.size} \nSpeed: {selectedAgent.speed} \nVision Distance: {selectedAgent.visionDistance} \nVision Angle: {selectedAgent.visionAngle} \nMutation Chance: {selectedAgent.mutationChance} \nMutation Magnitude: {selectedAgent.mutationMagnitude} \nIs Fertile: {selectedAgent.isFertile()} \nReproductive Cost: {selectedAgent.reproductionEnergyCost} \nOffspring No.: {selectedAgent.offspringCount}";
+            energyText.text = $"Age: {selectedAgent.age} \nEnergy: {selectedAgent.energy:F0} / {selectedAgent.maxEnergy:F0} \nHealth: {selectedAgent.health:F0} / {selectedAgent.maxHealth:F0} \nMetabolism Cost: {selectedAgent.metabolismCost} \n";
+            string attackInfo = SimulationManager.instance.config.enablePredation
+                ? $"\nAttack Damage: {selectedAgent.attackDamage:F1}"
+                : "";
+            string dietLabel = selectedAgent.dietPreference < 0.33f ? "Herbivore"
+                : selectedAgent.dietPreference > 0.66f ? "Carnivore"
+                : "Omnivore";
+            attributesText.text = $"Size: {selectedAgent.size} \nSpeed: {selectedAgent.speed} \nVision Distance: {selectedAgent.visionDistance} \nVision Angle: {selectedAgent.visionAngle} \nDiet: {dietLabel} ({selectedAgent.dietPreference:F2}) \nMutation Chance: {selectedAgent.mutationChance} \nMutation Magnitude: {selectedAgent.mutationMagnitude} \nIs Fertile: {selectedAgent.isFertile()} \nRep Cooldown: {selectedAgent.reproductionCooldown:F1} / {selectedAgent.maxReproductionCooldown:F1} \nReproductive Cost: {selectedAgent.reproductionEnergyCost} \nOffspring No.: {selectedAgent.offspringCount}{attackInfo}";
 
         }
     }

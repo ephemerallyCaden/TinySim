@@ -34,8 +34,8 @@ public class MutationManager
                 }
                 else if (mutationType < t2)
                 {
-                    // Half the time disable a connection, half the time try to prune a hidden node
-                    if (SimRandom.NextFloat() < 0.5f)
+                    float disableChance = cfg != null ? cfg.disableVsPruneChance : 0.5f;
+                    if (SimRandom.NextFloat() < disableChance)
                         DisableRandomConnection(genome);
                     else
                         PruneRandomHiddenNode(genome);
@@ -53,7 +53,7 @@ public class MutationManager
 
     }
 
-    // 1. Mutate connection weights
+    // 1. Mutate connection weights (Gaussian perturbation)
     private static void MutateWeights(Genome genome)
     {
         SimulationConfig cfg = SimulationManager.instance?.config;
@@ -63,7 +63,7 @@ public class MutationManager
         {
             if (SimRandom.NextDouble() < weightMutationChance)
             {
-                connection.weight += (SimRandom.NextDouble() - 0.5) * perturbationScale;
+                connection.weight += SimRandom.Gaussian() * perturbationScale;
             }
         }
     }
